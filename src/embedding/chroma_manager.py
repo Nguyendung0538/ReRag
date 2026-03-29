@@ -6,16 +6,14 @@ import os
 
 class ChromaManager:
     """
-    Quản lý bộ nhớ Vector trên ổ cứng.
-    Mỗi khi thêm tài liệu mới, sẽ drop DB cũ để DB luôn sạch và tập trung vào 2 tài liệu đang so sánh.
+    Quản lý bộ nhớ Vector trên RAM (In-memory).
+    Vì mỗi lần chạy chúng ta đều nạp lại 2 văn bản mới nên không cần lưu ra ổ cứng,
+    giúp tránh tạo ra các file rác và chạy nhanh hơn.
     """
-    def __init__(self, persist_dir: str = "./chroma_db", collection_name: str = "legal_docs"):
-        # Đảm bảo đường dẫn tuyệt đối hoặc tạo thư mục nếu chưa có
-        os.makedirs(persist_dir, exist_ok=True)
-        self.persist_dir = persist_dir
+    def __init__(self, collection_name: str = "legal_docs"):
         
-        # Kết nối tới Local Persistent DB
-        self.client = chromadb.PersistentClient(path=self.persist_dir)
+        # Kết nối tới In-Memory DB (Chỉ lưu trên RAM)
+        self.client = chromadb.EphemeralClient()
         self.collection_name = collection_name
         
         # Load Collection ra nếu có sẵn, dùng để Query lại sau này.

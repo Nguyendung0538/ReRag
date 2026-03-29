@@ -1,0 +1,54 @@
+Chào bạn, tôi đã đọc kỹ nội dung file 
+
+PJRAG.txt
+. Đây là một đồ án rất thực tế và thú vị. Việc so sánh hai văn bản pháp lý (hợp đồng, phụ lục,...) để tìm ra điểm khác biệt là một bài toán khó nhưng mang lại giá trị cao trong doanh nghiệp.
+
+Bạn đã có sự khởi đầu rất tốt khi chọn Qwen3:8B làm LLM và Qwen3-embedding:8B làm embedding model. Dòng Qwen nổi tiếng với khả năng xử lý tiếng Việt rất mượt mà và hoạt động cực tốt trong các tác vụ RAG, logic, và hiểu văn bản dài.
+
+Dưới đây là phân tích chi tiết giải pháp và lộ trình những kiến thức bạn cần phải tìm hiểu để xây dựng thành công dự án này:
+
+1. Phân tích hệ thống bạn cần xây dựng
+Khác với RAG truyền thống (hỏi-đáp trên một tập tài liệu lớn), bài toán của bạn thiên về "RAG đối chiếu" (Comparative RAG) trên 2 tài liệu cụ thể. Hệ thống của bạn sẽ hình dung như sau:
+
+Input: Người dùng tải lên Tài liệu A (bản cũ) và Tài liệu B (bản mới).
+Tiền xử lý: Bóc tách text, giữ nguyên được bối cảnh (Điều khoản nào? Chương nào?).
+Chunking & Indexing: Chia nhỏ text theo cấu trúc (không nên chia theo số lượng từ cố định) và lưu vào Vector DB kèm Metadata (Doc A, Điều 1,...).
+Retrieval (Truy vấn): Hệ thống sẽ đi từng điều khoản, tìm kiếm các cặp nội dung tương ứng giữa Doc A và Doc B.
+Generation (Sinh kết quả): Đưa cặp nội dung đó vào model Qwen3:8B để LLM tiến hành đối chiếu: "Có thêm/xóa/sửa gì không? Tóm tắt lại." kèm theo dẫn chứng cụ thể.
+Output: Hiển thị kết quả lên giao diện web UI (side-by-side).
+2. Những kiến thức kỹ thuật bạn CẦN TÌM HIỂU (Lộ trình học tập)
+Dựa trên yêu cầu của đồ án, bạn cần tập trung nghiên cứu các mảng sau:
+
+A. Xử lý dữ liệu đầu vào (Data Ingestion) & Chunking theo cấu trúc
+Việc chia nhỏ (chunking) pháp lý tuyệt đối không nên dùng Fixed-size chunking (cắt mỗi 500 từ/đoạn) vì sẽ làm đứt gãy nghĩa của một điều khoản.
+
+Thư viện bóc tách Text:
+Với DOCX: Tìm hiểu thư viện python-docx.
+Với PDF (đôi khi là PDF scan): Tìm hiểu PyMuPDF (fitz) hoặc pdfplumber để giữ được cấu trúc đoạn. (Vì yêu cầu ưu tiên text PDF/DOCX nên tạm thời chưa cần OCR như Tesseract).
+Semantic / Structural Chunking (Cực kỳ quan trọng):
+Bạn CẦN tìm hiểu cách viết Regex (Biểu thức chính quy) để nhận diện các tiêu đề: Chương I, Điều 1, Khoản 1.1...
+Mỗi "chunk" sẽ là một Điều/Khoản trọn vẹn.
+Tìm hiểu về Metadata: Mỗi chunk lưu vào database cần gắn nhãn (Ví dụ: {"doc_version": "A", "chapter": "1", "clause": "Điều 1", "page": 2}).
+B. Setup local models (Ollama / vLLM)
+Vì yêu cầu bảo mật số 1 là chạy Local/Offline, bạn không thể gọi API qua OpenAI hay Anthropic.
+
+Tìm hiểu về Ollama / LM Studio: Đây là 2 công cụ dễ nhất để chạy model Qwen3:8B trên máy cá nhân. (Bạn tải Qwen3:8B ở dạng GGUF để chạy nhẹ trên RAM/VRAM).
+Tìm hiểu HuggingFace sentence-transformers: Dùng để chạy local model Qwen3-embedding:8B để biến text thành vector.
+C. Vector Database (Lưu trữ và Truy xuất)
+Bạn sẽ cần một DB để lưu các embedding vector của tài liệu.
+
+Tìm hiểu ChromaDB, Qdrant hoặc FAISS: Do chạy local và dạng đồ án, ChromaDB hoặc FAISS là sự lựa chọn nhẹ, dễ dùng và cấu hình hoàn toàn local.
+Tìm hiểu Metadata Filtering (Lọc theo siêu dữ liệu): Khi so sánh "Điều 1" của bản A, bạn cần truy xuất DB với filter metadata: {doc_version: "B"} để tìm "Điều 1" tương ứng ở bản B, tránh việc nó truy xuất nhầm sang tài liệu khác.
+D. Prompt Engineering cho tác vụ So sánh
+RAG sinh ra kết quả hay bị "ảo giác" (Hallucination). Yêu cầu dự án là: "Không bằng chứng → không kết luận".
+
+Kỹ thuật Prompting: Bạn cần tìm hiểu cách cấu trúc Prompt thật chặt chẽ.
+Input vào LLM: Text A, Text B.
+System Prompt: "Bạn là trợ lý pháp lý. Nhiệm vụ của bạn là so sánh 2 văn bản. Chỉ dựa vào văn bản trả về các thay đổi (THÊM, XÓA, SỬA). Hãy trích dẫn nguyên văn phần bị thay đổi. Nếu không thấy thay đổi, trả về KHÔNG CÓ."
+Structured Output (JSON): Tìm hiểu cách ép Qwen trả về JSON format (để bạn dễ dàng bóc tách dữ liệu hiển thị lên Web). Ví dụ: [{"type": "SỬA", "old_text": "...", "new_text": "...", "summary": "..."}]
+E. Xây dựng giao diện Web (Web UI)
+Giao diện nhẹ gọn: Hãy tìm hiểu Streamlit hoặc Gradio (rất phổ biến cho RAG UI bằng Python).
+Đặc biệt Streamlit có hỗ trợ layout chia 2 cột rất tiện cho việc trình bày Side-by-side (bản cũ bên trái, bản mới bên phải).
+F. Đánh giá tính chuẩn xác (Evaluation)
+Theo yêu cầu tuần 10-11, bạn cần framework đánh giá.
+Tìm hiểu RAGAS hoặc TruLens: Đây là các framework giúp chấm điểm xem RAG truy xuất có đúng văn bản không (Context Precision) và LLM trả lời có trung thành với tài liệu không (Faithfulness).

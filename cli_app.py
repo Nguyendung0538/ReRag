@@ -26,7 +26,7 @@ def main():
 
     print("\n🛠 BƯỚC 2: KHỞI TẠO DỮ LIỆU...")
     try:
-        db_manager = ChromaManager(persist_dir="./chroma_db", collection_name="legal_compare")
+        db_manager = ChromaManager(collection_name="legal_compare")
         
         print("\n🧹 Đang xóa Database pháp lý cũ...")
         db_manager.reset_collection()

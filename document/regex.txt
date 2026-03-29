@@ -1,0 +1,98 @@
+Việc xử lý và trích xuất dữ liệu từ văn bản pháp lý Việt Nam thường đòi hỏi các mẫu Regular Expression (Regex) đặc thù do cấu trúc văn bản được quy định khá chặt chẽ (theo Thể thức văn bản hành chính).
+
+Dưới đây là tổng hợp các mẫu Regex phổ biến nhất, thường được dùng để bóc tách thông tin từ các nghị định, quyết định, luật, hay hợp đồng:
+
+### 1. Số và ký hiệu văn bản (Document Number & Symbol)
+
+Văn bản pháp lý Việt Nam thường có định dạng: `[Số thứ tự]/[Năm ban hành]/[Tên loại VB]-[Cơ quan ban hành]` (ví dụ: *15/2023/NĐ-CP*, *01/2024/TT-BGDĐT*).
+
+* **Mẫu Regex:** ```regex
+(?:Số:\s*)?(\d+)/(\d{4})/([A-ZĐ]+-[A-ZĐ]+)
+```
+
+```
+
+
+* **Giải thích nhóm (Capture Groups):**
+* Group 1: Số thứ tự (VD: 15)
+* Group 2: Năm ban hành (VD: 2023)
+* Group 3: Ký hiệu (VD: NĐ-CP)
+
+
+* *Lưu ý:* Cần thêm chữ `Đ` vào cụm `[A-Z]` để bắt được các ký hiệu tiếng Việt viết hoa (như NĐ - Nghị định, QĐ - Quyết định).
+
+### 2. Cấu trúc Ngày, Tháng, Năm
+
+Cụm từ chỉ thời gian ban hành thường nằm ở góc phải hoặc trong nội dung văn bản (ví dụ: *ngày 15 tháng 03 năm 2026*).
+
+* **Mẫu Regex:**
+```regex
+ngày\s+(\d{1,2})\s+tháng\s+(\d{1,2})\s+năm\s+(\d{4})
+
+```
+
+
+* **Mở rộng (Bắt cả trường hợp bỏ trống `...` để điền tay):**
+```regex
+ngày\s+(\d{1,2}|\.{3,})\s+tháng\s+(\d{1,2}|\.{3,})\s+năm\s+(\d{4}|\.{3,})
+
+```
+
+
+
+### 3. Trích xuất Điều, Khoản, Điểm
+
+Dùng để bắt các tiêu đề điều luật hoặc các đoạn trích dẫn luật (ví dụ: *Điều 1.*, *Khoản 2 Điều 3*, *Điểm a Khoản 1 Điều 5*).
+
+* **Bắt tiêu đề "Điều":** (thường đứng đầu dòng)
+```regex
+^Điều\s+(\d+)\.
+
+```
+
+
+* **Bắt cụm trích dẫn (Điểm, Khoản, Điều):**
+```regex
+(?:Điểm\s+([a-zđ])\s+)?(?:Khoản\s+(\d+)\s+)?Điều\s+(\d+)
+
+```
+
+
+*Dùng Regex này sẽ giúp bạn lấy được chính xác [Điểm a], [Khoản 2], [Điều 5] thành từng nhóm riêng biệt.*
+
+### 4. Căn cứ pháp lý
+
+Phần mở đầu văn bản thường liệt kê các căn cứ để ban hành, kết thúc bằng dấu chấm phẩy (ví dụ: *Căn cứ Luật Doanh nghiệp ngày 17 tháng 6 năm 2020;*).
+
+* **Mẫu Regex:**
+```regex
+(?m)^Căn cứ\s+(.*?);$
+
+```
+
+
+* **Giải thích:** `(?m)` là cờ multiline để `^` và `$` khớp với đầu/cuối của từng dòng. Nó sẽ lấy toàn bộ nội dung từ chữ "Căn cứ" cho đến dấu `;`.
+
+### 5. Căn cước công dân (CCCD) và Mã số thuế (MST)
+
+Thường gặp trong các quyết định xử phạt, giấy phép, hoặc hợp đồng.
+
+* **CCCD (12 chữ số):** ```regex
+\b[0-9]{12}\b
+```
+*(Có thể kiểm tra sâu hơn: 3 số đầu là mã tỉnh, 1 số giới tính/thế kỷ, 2 số năm sinh, 6 số ngẫu nhiên).*
+
+```
+
+
+* **Mã số thuế doanh nghiệp (10 hoặc 14 số, có dấu gạch ngang):**
+```regex
+\b(\d{10})(?:-\d{3})?\b
+
+```
+
+
+
+---
+
+**Lưu ý khi lập trình:** Tiếng Việt sử dụng Unicode, nên tùy thuộc vào ngôn ngữ lập trình bạn dùng (Python, JavaScript, C#...), bạn có thể cần thêm cờ `u` (Unicode) hoặc cờ `i` (Case-insensitive) để đảm bảo không bị lỗi font khi nhận diện chữ hoa/chữ thường.
