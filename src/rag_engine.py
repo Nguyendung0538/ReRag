@@ -83,35 +83,17 @@ class LegalRAGEngine:
         
     def stream_ask(self, query: str, top_k: int = 6) -> Iterator[str]:
         """Thực hiện luồng RAG và yield text dưới dạng Stream."""
-        # Yield trạng thái đang xử lý ra CLI
-        yield "\n[Hệ thống] Đang truy dò tài liệu pháp lý liên quan từ Vector Database...\n"
         results = self.db.query(query, n_results=top_k)
         
         # Log nhanh các nguồn tra cứu được
         docs = results.get("documents", [[]])[0]
-        metas = results.get("metadatas", [[]])[0]
         
         if not docs:
             yield "❌ Không tìm thấy văn bản pháp lý nào khớp với dữ liệu trong bộ nhớ."
             return
             
-        yield "[Hệ thống] Đã tìm thấy các căn cứ sau:\n"
-        for meta in metas:
-            source = meta.get("source")
-            label = ""
-            if self.old_law_source and source == self.old_law_source:
-                label = "(Luật Cũ)"
-            elif self.new_law_source and source == self.new_law_source:
-                label = "(Luật Mới)"
-            yield f"   📎 {source} {label} - {meta.get('chuong')} - {meta.get('dieu')}\n"
-            
-        yield "\n[Chuyên gia Pháp Lý] Đang phân tích so sánh...\n"
-        yield "=" * 60 + "\n\n"
-        
         prompt = self._build_context_prompt(query, results)
         
         # Bắt đầu stream câu trả lời từ LLM
         for chunk in self.llm.stream_response(prompt=prompt, system_prompt=self.system_prompt):
             yield chunk
-            
-        yield "\n\n" + "=" * 60 + "\n[Kết thúc phân tích]"
