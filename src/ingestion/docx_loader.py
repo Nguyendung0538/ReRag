@@ -23,13 +23,14 @@ def iter_block_items(parent):
         elif isinstance(child, CT_Tbl):
             yield Table(child, parent)
 
-def load_docx(file_path: str) -> str:
+def load_docx(file_source) -> str:
     """
-    Reads a DOCX file and extracts text from paragraphs and tables in the exact document order.
+    Reads a DOCX file from a path string or a file-like stream object.
+    Extracts text from paragraphs and tables in the exact document order.
     Returns the full text as a string.
     """
     try:
-        doc = docx.Document(file_path)
+        doc = docx.Document(file_source)
         full_text = []
         
         for block in iter_block_items(doc):
@@ -48,7 +49,7 @@ def load_docx(file_path: str) -> str:
                         
         return "\n".join(full_text)
     except Exception as e:
-        print(f"Error loading DOCX {file_path}: {e}")
+        print(f"Error loading DOCX: {e}")
         return ""
 
 if __name__ == "__main__":

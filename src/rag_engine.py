@@ -12,16 +12,23 @@ class LegalRAGEngine:
         self.old_law_source = old_law_source
         self.new_law_source = new_law_source
         
-        # System prompt định hướng vai trò chuyên gia phân tích luật
+        # System prompt định hướng vai trò chuyên gia SO SÁNH 2 tài liệu pháp lý
         self.system_prompt = (
-            "Bạn là một chuyên gia Chuyên môn Pháp lý và Lập pháp xuất sắc tại Việt Nam.\n"
-            "Nhiệm vụ của bạn là so sánh, đối chiếu và giải đáp các thắc mắc về các điều khoản luật dựa TRÊN NHỮNG TÀI LIỆU ĐƯỢC CUNG CẤP.\n"
-            "BẮT BUỘC TUÂN THỦ CÁC QUY TẮC SAU:\n"
-            "1. CHỈ dựa vào phần \"Các Trích Đoạn Pháp Lý\" được cung cấp bên dưới để trả lời.\n"
-            "2. Nếu tài liệu cung cấp KHÔNG chứa đủ thông tin để trả lời, HÃY TRẢ LỜI: \"Dựa trên dữ liệu hiện tại, tôi không tìm thấy thông tin phù hợp để trả lời câu hỏi này.\", KHÔNG ĐƯỢC tự bịa ra kiến thức (No Hallucination).\n"
-            "3. LUÔN LUÔN trích dẫn rõ nguồn (Tên File, Chương, Điều, Khoản) khi bạn đưa ra nhận định hoặc dẫn chứng.\n"
-            "4. Khi được yêu cầu so sánh (ví dụ giữa tài liệu cũ và mới), hãy chỉ ra rõ RÀNG cái gì ĐƯỢC GIỮ NGUYÊN, cái gì BỊ XÓA BỎ, và cái gì ĐƯỢC THÊM MỚI.\n"
-            "5. Câu trả lời phải khách quan, rõ ràng, trình bày dạng danh sách gạch đầu dòng (bullet points) dễ đọc."
+            "Bạn là chuyên gia đối chiếu và phân tích văn bản pháp lý tại Việt Nam.\n"
+            f"Hệ thống đang làm việc với HAI tài liệu: [BẢN GỐC] = \"{self.old_law_source}\" và [BẢN MỚI] = \"{self.new_law_source}\".\n"
+            "Nhiệm vụ duy nhất là SO SÁNH, PHÁT HIỆN SỰ THAY ĐỔI giữa 2 tài liệu dựa HOÀN TOÀN vào trích đoạn được cung cấp.\n\n"
+            "QUY TẮC BẮT BUỘC:\n"
+            "1. CHỈ sử dụng nội dung từ phần \"Trích đoạn pháp lý\" bên dưới. TUYỆT ĐỐI KHÔNG dùng kiến thức ngoài (No Hallucination).\n"
+            "2. Nếu trích đoạn KHÔNG đủ thông tin, chỉ trả lời đúng 1 câu: \"Không đủ dữ liệu để so sánh nội dung này.\" rồi DỪNG.\n"
+            "3. LUÔN trích dẫn nguồn cụ thể (Tên file, Chương, Điều, Khoản) khi đưa ra nhận định.\n"
+            "4. Kết quả so sánh PHẢI phân loại rõ ràng:\n"
+            "   - ✅ GIỮ NGUYÊN: Nội dung giống nhau giữa 2 tài liệu\n"
+            "   - ➕ THÊM MỚI: Nội dung có trong [BẢN MỚI] nhưng KHÔNG có trong [BẢN GỐC]\n"
+            "   - ❌ XÓA BỎ: Nội dung có trong [BẢN GỐC] nhưng KHÔNG có trong [BẢN MỚI]\n"
+            "   - 📝 SỬA ĐỔI: Nội dung có trong cả 2 nhưng khác nhau (nêu rõ khác ở điểm nào)\n"
+            "5. Nếu KHÔNG CÓ SỰ THAY ĐỔI, chỉ ghi: \"Không có sự thay đổi về [chủ đề].\"\n"
+            "6. Trình bày bằng bullet points, ngắn gọn, dễ đọc.\n"
+            "7. TUYỆT ĐỐI KHÔNG thêm ghi chú phụ như '(không thay đổi so với BẢN MỚI)', '(không thay đổi so với BẢN GỐC)' vào cuối câu. Nếu nội dung giống nhau, xếp vào mục ✅ GIỮ NGUYÊN là đủ."
         )
 
     def _build_context_prompt(self, query: str, search_results: Dict[str, Any]) -> str:
@@ -37,13 +44,22 @@ class LegalRAGEngine:
         metadatas = search_results.get("metadatas", [[]])[0]
         
         for i, (doc, meta) in enumerate(zip(documents, metadatas)):
-            source = meta.get("source", "Không rõ Nguồn")
-            chuong = meta.get("chuong", "Không rõ Chương")
-            muc = meta.get("muc", "Không rõ Mục")
-            dieu = meta.get("dieu", "Không rõ Điều")
+            source = meta.get("source", "")
+            chuong = meta.get("chuong", "")
+            muc    = meta.get("muc", "")
+            dieu   = meta.get("dieu", "")
+            
+            # Lọc bỏ các giá trị không xác định trước khi ghép chuỗi vị trí
+            _UNKNOWN_TOKENS = {"không rõ", "không xác định", "n/a", "none", ""}
+            
+            def _is_known(val: str) -> bool:
+                return val.strip().lower() not in _UNKNOWN_TOKENS
+            
+            location_parts = [p for p in [chuong, muc, dieu] if _is_known(p)]
+            location_str = " > ".join(location_parts) if location_parts else "Không rõ vị trí"
             
             # Format 1 block thông tin
-            block = f"Vị trí: {chuong} > {muc} > {dieu}\nNội dung văn bản:\n{doc}\n" + "-" * 30
+            block = f"Vị trí: {location_str}\nNội dung văn bản:\n{doc}\n" + "-" * 30
             
             if self.old_law_source and source == self.old_law_source:
                 old_law_blocks.append(block)
@@ -54,11 +70,11 @@ class LegalRAGEngine:
                 
         context_str = ""
         if old_law_blocks:
-            context_str += "--- BỐI CẢNH LUẬT CŨ (TÀI LIỆU 1) ---\n" + "\n\n".join(old_law_blocks) + "\n\n"
+            context_str += "=== BẢN GỐC ===\n" + "\n\n".join(old_law_blocks) + "\n\n"
         if new_law_blocks:
-            context_str += "--- BỐI CẢNH LUẬT MỚI (TÀI LIỆU 2) ---\n" + "\n\n".join(new_law_blocks) + "\n\n"
+            context_str += "=== BẢN MỚI ===\n" + "\n\n".join(new_law_blocks) + "\n\n"
         if other_blocks:
-            context_str += "--- CÁC TÀI LIỆU KHÁC ---\n" + "\n\n".join(other_blocks) + "\n\n"
+            context_str += "=== TÀI LIỆU KHÁC ===\n" + "\n\n".join(other_blocks) + "\n\n"
         
         final_prompt = (
             "Dưới đây là CÁC TRÍCH ĐOẠN PHÁP LÝ được rút trích có liên quan tới câu hỏi của người dùng:\n\n"
@@ -81,19 +97,14 @@ class LegalRAGEngine:
         answer = self.llm.generate_response(prompt=prompt, system_prompt=self.system_prompt)
         return answer
         
-    def stream_ask(self, query: str, top_k: int = 6) -> Iterator[str]:
-        """Thực hiện luồng RAG và yield text dưới dạng Stream."""
-        results = self.db.query(query, n_results=top_k)
+    def stream_ask(self, query: str, strategy_name: str = "Normal_v1 (Raw Query)", top_k: int = 6) -> Iterator[str]:
+        """Thực hiện luồng RAG và yield text dưới dạng Stream thông qua một Strategy được chọn."""
+        from src.query_strategies import STRATEGIES, NormalV1Strategy
         
-        # Log nhanh các nguồn tra cứu được
-        docs = results.get("documents", [[]])[0]
+        # Chọn lớp Strategy (Fallback về NormalV1 nếu string bị sai)
+        strategy_class = STRATEGIES.get(strategy_name, NormalV1Strategy)
+        strategy_instance = strategy_class()
         
-        if not docs:
-            yield "❌ Không tìm thấy văn bản pháp lý nào khớp với dữ liệu trong bộ nhớ."
-            return
-            
-        prompt = self._build_context_prompt(query, results)
-        
-        # Bắt đầu stream câu trả lời từ LLM
-        for chunk in self.llm.stream_response(prompt=prompt, system_prompt=self.system_prompt):
+        # Chuyển nhượng phân luồng thực thi cho class Strategy
+        for chunk in strategy_instance.stream_execute(query=query, engine=self, top_k=top_k):
             yield chunk

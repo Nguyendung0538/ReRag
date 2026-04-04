@@ -10,7 +10,7 @@ class ChromaManager:
     Vì mỗi lần chạy chúng ta đều nạp lại 2 văn bản mới nên không cần lưu ra ổ cứng,
     giúp tránh tạo ra các file rác và chạy nhanh hơn.
     """
-    def __init__(self, collection_name: str = "legal_docs"):
+    def __init__(self, collection_name: str = "legal_docs", embedding_model: str = "qwen3-embedding:8b"):
         
         # Kết nối tới In-Memory DB (Chỉ lưu trên RAM)
         self.client = chromadb.EphemeralClient()
@@ -19,7 +19,7 @@ class ChromaManager:
         # Load Collection ra nếu có sẵn, dùng để Query lại sau này.
         self.collection = self.client.get_or_create_collection(name=self.collection_name)
         
-        self.embedder = OllamaEmbedder()
+        self.embedder = OllamaEmbedder(model_name=embedding_model)
 
     def reset_collection(self):
         """Xóa trắng Collection pháp lý cũ để nạp tài liệu mới"""
@@ -74,13 +74,16 @@ class ChromaManager:
         )
         print("Hoàn tất nạp dữ liệu vào Database Vector cục bộ!")
         
-    def query(self, text: str, n_results: int = 5) -> Dict[str, Any]:
-        """Tìm kiếm các chunks gần nhất với câu hỏi chứa nội dung so sánh"""
-        # Embed câu truy vấn
+    def query(self, text: str, n_results: int = 5, where: dict = None) -> Dict[str, Any]:
+        """Tìm kiếm các chunks gần nhất với câu hỏi, hỗ trợ filter theo metadata (VD: where={'source': 'file.docx'})."""
         query_vector = self.embedder.embed_text(text)
         
-        results = self.collection.query(
+        kwargs = dict(
             query_embeddings=[query_vector],
-            n_results=n_results
+            n_results=n_results,
         )
+        if where:
+            kwargs["where"] = where
+        
+        results = self.collection.query(**kwargs)
         return results

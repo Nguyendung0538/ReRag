@@ -1,13 +1,13 @@
 import pdfplumber
 
-def load_pdf(file_path: str) -> str:
+def load_pdf(file_source) -> str:
     """
-    Reads a PDF file and extracts text using pdfplumber, keeping paragraph structures as much as possible.
+    Reads a PDF file from a path string or a file-like stream object using pdfplumber.
     Returns the full text as a string.
     """
     full_text = []
     try:
-        with pdfplumber.open(file_path) as pdf:
+        with pdfplumber.open(file_source) as pdf:
             for page in pdf.pages:
                 # Extract text preserving layout to some extent
                 text = page.extract_text(layout=True)
@@ -19,7 +19,7 @@ def load_pdf(file_path: str) -> str:
                     
         return "\n".join(full_text)
     except Exception as e:
-        print(f"Error loading PDF {file_path}: {e}")
+        print(f"Error loading PDF: {e}")
         return ""
 
 if __name__ == "__main__":

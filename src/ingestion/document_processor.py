@@ -4,31 +4,40 @@ from .pdf_loader import load_pdf
 from .legal_chunker import LegalChunker, DocumentChunk
 from typing import List
 
-def process_document(file_path: str) -> List[DocumentChunk]:
+def process_document(file_source, filename: str = None, ext: str = None) -> List[DocumentChunk]:
     """
     Hàm tổng hợp cho pipeline xử lý tài liệu.
-    Nhận tham số là file path -> Đọc text bằng Loader -> Chia theo Chunker -> Trả về danh sách DocumentChunk.
+    Hỗ trợ `file_source` là đường dẫn string hoặc đối tượng file-like (ví dụ UploadedFile từ Streamlit).
     """
-    ext = os.path.splitext(file_path)[1].lower()
-    if not os.path.exists(file_path):
-        raise FileNotFoundError(f"Không tìm thấy file: {file_path}")
+    if isinstance(file_source, str):
+        if ext is None:
+            ext = os.path.splitext(file_source)[1].lower()
+        if filename is None:
+            filename = os.path.basename(file_source)
+        if not os.path.exists(file_source):
+            raise FileNotFoundError(f"Không tìm thấy file: {file_source}")
+    else:
+        if ext is None or filename is None:
+            raise ValueError("Khi tải lên trực tiếp từ RAM, phải cung cấp `filename` và `ext`.")
+        ext = ext.lower()
         
     if ext == ".docx":
-        text = load_docx(file_path)
+        text = load_docx(file_source)
         doc_type = "DOCX"
     elif ext == ".pdf":
-        text = load_pdf(file_path)
+        text = load_pdf(file_source)
         doc_type = "PDF"
     elif ext == ".txt":
-        with open(file_path, "r", encoding="utf-8") as f:
-            text = f.read()
+        if isinstance(file_source, str):
+            with open(file_source, "r", encoding="utf-8") as f:
+                text = f.read()
+        else:
+            text = file_source.read().decode("utf-8")
         doc_type = "TXT"
     else:
         raise ValueError(f"Định dạng file không được hỗ trợ: {ext}")
-        
-    filename = os.path.basename(file_path)
     base_metadata = {
-        "source": filename,
+        "source": getattr(file_source, 'name', filename) if filename else "unknown",
         "type": doc_type
     }
     
