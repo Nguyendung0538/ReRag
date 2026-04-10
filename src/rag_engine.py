@@ -1,34 +1,41 @@
 from typing import List, Dict, Any, Iterator
-from src.embedding.chroma_manager import ChromaManager
+from src.indexing_strategies.base_indexing import BaseIndexingStrategy
 from src.generation.llm_client import LLMClient
 
 class LegalRAGEngine:
     """
     Bộ não RAG: Kết hợp truy xuất Database và lập luận LLM để trả lời câu hỏi So sánh Pháp lý.
     """
-    def __init__(self, db_manager: ChromaManager, llm_client: LLMClient, old_law_source: str = "", new_law_source: str = ""):
-        self.db = db_manager
+    def __init__(self, indexing_strategy: BaseIndexingStrategy, llm_client: LLMClient, old_law_source: str = "", new_law_source: str = ""):
+        self.indexing_strategy = indexing_strategy
         self.llm = llm_client
         self.old_law_source = old_law_source
         self.new_law_source = new_law_source
         
         # System prompt định hướng vai trò chuyên gia SO SÁNH 2 tài liệu pháp lý
+        # Rút tên ngắn gọn từ filename (VD: "59_2014_QH13.docx" → "Luật 59/2014/QH13")
+        old_label = self.old_law_source or "Tài liệu 1"
+        new_label = self.new_law_source or "Tài liệu 2"
+
         self.system_prompt = (
             "Bạn là chuyên gia đối chiếu và phân tích văn bản pháp lý tại Việt Nam.\n"
-            f"Hệ thống đang làm việc với HAI tài liệu: [BẢN GỐC] = \"{self.old_law_source}\" và [BẢN MỚI] = \"{self.new_law_source}\".\n"
-            "Nhiệm vụ duy nhất là SO SÁNH, PHÁT HIỆN SỰ THAY ĐỔI giữa 2 tài liệu dựa HOÀN TOÀN vào trích đoạn được cung cấp.\n\n"
+            f"Hệ thống đang làm việc với HAI tài liệu:\n"
+            f"  • Tài liệu cũ hơn: \"{old_label}\"\n"
+            f"  • Tài liệu mới hơn: \"{new_label}\"\n\n"
             "QUY TẮC BẮT BUỘC:\n"
-            "1. CHỈ sử dụng nội dung từ phần \"Trích đoạn pháp lý\" bên dưới. TUYỆT ĐỐI KHÔNG dùng kiến thức ngoài (No Hallucination).\n"
-            "2. Nếu trích đoạn KHÔNG đủ thông tin, chỉ trả lời đúng 1 câu: \"Không đủ dữ liệu để so sánh nội dung này.\" rồi DỪNG.\n"
-            "3. LUÔN trích dẫn nguồn cụ thể (Tên file, Chương, Điều, Khoản) khi đưa ra nhận định.\n"
-            "4. Kết quả so sánh PHẢI phân loại rõ ràng:\n"
-            "   - ✅ GIỮ NGUYÊN: Nội dung giống nhau giữa 2 tài liệu\n"
-            "   - ➕ THÊM MỚI: Nội dung có trong [BẢN MỚI] nhưng KHÔNG có trong [BẢN GỐC]\n"
-            "   - ❌ XÓA BỎ: Nội dung có trong [BẢN GỐC] nhưng KHÔNG có trong [BẢN MỚI]\n"
-            "   - 📝 SỬA ĐỔI: Nội dung có trong cả 2 nhưng khác nhau (nêu rõ khác ở điểm nào)\n"
-            "5. Nếu KHÔNG CÓ SỰ THAY ĐỔI, chỉ ghi: \"Không có sự thay đổi về [chủ đề].\"\n"
-            "6. Trình bày bằng bullet points, ngắn gọn, dễ đọc.\n"
-            "7. TUYỆT ĐỐI KHÔNG thêm ghi chú phụ như '(không thay đổi so với BẢN MỚI)', '(không thay đổi so với BẢN GỐC)' vào cuối câu. Nếu nội dung giống nhau, xếp vào mục ✅ GIỮ NGUYÊN là đủ."
+            "1. TRẢ LỜI ĐÚNG TRỌNG TÂM: Chỉ phân tích nội dung mà câu hỏi ĐỀ CẬP.\n"
+            "2. CHỈ TẬP TRUNG THAY ĐỔI BẢN CHẤT: Chỉ báo cáo các thay đổi về NỘI DUNG PHÁP LÝ (quyền, nghĩa vụ, đối tượng, thời hạn...). "
+            "TUYỆT ĐỐI BỎ QUA các thay đổi về cách diễn đạt (từ đồng nghĩa), cách trình bày, hoặc định dạng (viết Hoa/thường) nếu không làm thay đổi ý nghĩa pháp lý.\n"
+            "3. CHỈ sử dụng nội dung từ phần \"Trích đoạn pháp lý\" bên dưới. TUYỆT ĐỐI KHÔNG dùng kiến thức ngoài (No Hallucination).\n"
+            "4. Nếu trích đoạn KHÔNG đủ thông tin, trả lời: \"Không đủ dữ liệu để so sánh nội dung này.\" rồi DỪNG.\n"
+            "5. LUÔN trích dẫn nguồn cụ thể (Chương, Điều, Khoản). Khi nhắc đến tài liệu, "
+            "dùng tên ngắn gọn tự nhiên (VD: \"Luật 2014\", \"Luật 2023\").\n"
+            "6. TUYỆT ĐỐI KHÔNG LIỆT KÊ PHẦN GIỮ NGUYÊN hoặc \"KHÔNG THAY ĐỔI\". Chỉ nêu các điểm KHÁC BIỆT THỰC SỰ:\n"
+            "   - ➕ THÊM MỚI: Nội dung bản chất chỉ có trong tài liệu mới\n"
+            "   - ❌ XÓA BỎ: Nội dung bản chất bị loại bỏ khỏi tài liệu mới\n"
+            "   - 📝 SỬA ĐỔI: Nội dung pháp lý thay đổi (nêu rõ khác ở điểm nào)\n"
+            "7. Nếu KHÔNG CÓ THAY ĐỔI PHÁP LÝ ĐÁNG KỂ về chủ đề được hỏi, chỉ ghi: \"Không có sự thay đổi pháp lý đáng kể về [chủ đề].\"\n"
+            "8. Trình bày bằng bullet points, ngắn gọn, dễ đọc. KHÔNG thêm ghi chú thừa vào cuối câu."
         )
 
     def _build_context_prompt(self, query: str, search_results: Dict[str, Any]) -> str:
@@ -87,8 +94,8 @@ class LegalRAGEngine:
 
     def ask(self, query: str, top_k: int = 5) -> str:
         """Thực hiện một luồng RAG hoàn chỉnh trả về kết quả duy nhất."""
-        print(f"[RAG] Đang dò tìm {top_k} phần tử tài liệu liên quan nhất trong CSDL...")
-        results = self.db.query(query, n_results=top_k)
+        print(f"[RAG] Đang dò tìm {top_k} phần tử tài liệu liên quan nhất qua Indexing Strategy...")
+        results = self.indexing_strategy.build_context(query, top_k=top_k)
         
         print("[RAG] Đang khởi tạo bộ Prompt kết hợp ngữ cảnh...")
         prompt = self._build_context_prompt(query, results)

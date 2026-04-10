@@ -6,6 +6,7 @@ from src.generation.llm_client import LLMClient
 from src.rag_engine import LegalRAGEngine
 from src.ingestion.document_processor import process_document
 from src.query_strategies import STRATEGIES
+from src.indexing_strategies import INDEXING_STRATEGIES
 
 st.set_page_config(page_title="Hệ thống Trợ lý Pháp lý RAG", page_icon="⚖️", layout="wide")
 
@@ -35,6 +36,8 @@ if "new_law_name" not in st.session_state:
     st.session_state["new_law_name"] = ""
 if "strategy_choice" not in st.session_state:
     st.session_state["strategy_choice"] = list(STRATEGIES.keys())[0]
+if "indexing_strategy" not in st.session_state:
+    st.session_state["indexing_strategy"] = list(INDEXING_STRATEGIES.keys())[0]
 if "display_mode" not in st.session_state:
     st.session_state["display_mode"] = "Hiển thị Nhanh (Buffered Stream)"
 # Mặc định chọn model phù hợp nhất nếu có, không thì lấy model đầu tiên
@@ -48,6 +51,19 @@ if "embedding_model" not in st.session_state:
 # ==================== SETTINGS MODAL ====================
 @st.dialog("⚙️ Cài đặt Hệ thống RAG")
 def show_settings():
+    # ── Indexing Strategy ───────────────────────────────────────────────────
+    st.subheader("📂 Indexing Strategy")
+    st.caption("Cách xử lý và lưu trữ dữ liệu (ChromaDB Vector hay RAM).")
+    chosen_idx_strat = st.selectbox(
+        label="Indexing Strategy:",
+        options=list(INDEXING_STRATEGIES.keys()),
+        index=list(INDEXING_STRATEGIES.keys()).index(st.session_state["indexing_strategy"])
+    )
+    
+    is_vectorless = "Vectorless" in chosen_idx_strat
+
+    st.divider()
+    
     # ── Model Selection ──────────────────────────────────────────────────────
     st.subheader("🤖 Lựa chọn Model Ollama")
 
@@ -66,14 +82,19 @@ def show_settings():
         )
     with col_emb:
         emb_idx = all_models.index(st.session_state["embedding_model"]) if st.session_state["embedding_model"] in all_models else 0
-        chosen_emb = st.selectbox(
-            "📐 Embedding (nhúng văn bản):",
-            options=all_models,
-            index=emb_idx,
-            help="Model dùng để tạo vector. Khuyến nghị: qwen3-embedding:8b"
-        )
+        
+        if is_vectorless:
+            st.info("⚠️ Vectorless RAG: Không cần dùng Embedding Model.")
+            chosen_emb = st.session_state.get("embedding_model", all_models[0] if all_models else "qwen3-embedding:8b")
+        else:
+            chosen_emb = st.selectbox(
+                "📐 Embedding (nhúng văn bản):",
+                options=all_models,
+                index=emb_idx,
+                help="Model dùng để tạo vector. Khuyến nghị: qwen3-embedding:8b"
+            )
 
-    if chosen_llm == chosen_emb:
+    if chosen_llm == chosen_emb and not is_vectorless:
         st.warning("⚠️ LLM và Embedding đang dùng cùng 1 model — sẽ tranh VRAM, có thể chậm hơn.")
 
     st.divider()
@@ -105,11 +126,13 @@ def show_settings():
             st.session_state["llm_model"] = chosen_llm
             st.session_state["embedding_model"] = chosen_emb
             st.session_state["strategy_choice"] = chosen_strategy
+            st.session_state["indexing_strategy"] = chosen_idx_strat
             st.session_state["display_mode"] = chosen_mode
-            # Reset ChromaDB nếu embedding model thay đổi (vector cũ sẽ không tương thích)
-            if chosen_emb != st.session_state.get("embedding_model", chosen_emb):
+            
+            # Reset DB nếu đổi thông số quan trọng
+            if chosen_emb != st.session_state.get("embedding_model", chosen_emb) or chosen_idx_strat != st.session_state.get("indexing_strategy", ""):
                 st.session_state["db_ready"] = False
-                st.info("ℹ️ Embedding model thay đổi — cần Khởi tạo lại RAG.")
+                st.info("ℹ️ Cài đặt cốt lõi thay đổi — cần Khởi tạo lại RAG.")
             st.rerun()
     with col_cancel:
         if st.button("Huỷ", use_container_width=True):
@@ -130,14 +153,9 @@ with st.sidebar:
             st.session_state["new_law_name"] = file_new.name
             
             init_start = time.time()
-            with st.spinner("Đang cấu trúc lại văn bản và nhúng (Embed) lên ChromaDB... Xin đợi..."):
+            with st.spinner("Đang cấu trúc và nạp văn bản (theo Indexing Strategy)... Xin đợi..."):
                 try:
-                    db_manager = ChromaManager(
-                        collection_name="legal_compare",
-                        embedding_model=st.session_state["embedding_model"]
-                    )
-                    db_manager.reset_collection()
-                    
+                    # Parse document chunks
                     all_chunks = []
                     for f_obj in [file_old, file_new]:
                         ext = os.path.splitext(f_obj.name)[1].lower()
@@ -147,15 +165,37 @@ with st.sidebar:
                         all_chunks.extend(chunks)
                     
                     if all_chunks:
-                        db_manager.add_documents(all_chunks)
-                        # Giải phóng VRAM của embedding model → nhường tài nguyên cho LLM
-                        db_manager.embedder.unload()
+                        # Init strategy
+                        idx_strat_name = st.session_state["indexing_strategy"]
+                        strat_class = INDEXING_STRATEGIES[idx_strat_name]
+                        if "Tradi" in idx_strat_name:
+                            indexer = strat_class(embedding_model=st.session_state["embedding_model"])
+                        elif "Hybrid" in idx_strat_name:
+                            indexer = strat_class(
+                                embedding_model=st.session_state["embedding_model"],
+                                llm_model=st.session_state["llm_model"]
+                            )
+                        elif "Vectorless" in idx_strat_name:
+                            indexer = strat_class(llm_model=st.session_state["llm_model"])
+                        else:
+                            # Fallback khởi tạo
+                            indexer = strat_class()
+                            
+                        # Keep it globally so we can retrieve exactly what was just parsed 
+                        # This is especially true for NoEmbed which holds data in RAM.
+                        st.session_state["active_indexer"] = indexer
+                        
+                        success = indexer.index(all_chunks)
+                        
                         init_elapsed = time.time() - init_start
-                        st.session_state["db_ready"] = True
-                        st.success(
-                            f"✅ Đã nạp thành công **{len(all_chunks)} đoạn văn bản** từ 2 tài liệu!\n\n"
-                            f"🕒 Thời gian khởi tạo: **{init_elapsed:.1f} giây**"
-                        )
+                        if success:
+                            st.session_state["db_ready"] = True
+                            st.success(
+                                f"✅ Đã nạp thành công **{len(all_chunks)} đoạn văn bản** từ 2 tài liệu!\n\n"
+                                f"🕒 Thời gian khởi tạo: **{init_elapsed:.1f} giây**"
+                            )
+                        else:
+                            st.error(f"❌ Quá trình lưu thất bại (có thể tổng dung lượng quá giới hạn của Indexing Strategy hiện tại). Hãy thử đổi Indexing Strategy.")
                     else:
                         st.error("Không thể rút trích văn bản từ 2 file này.")
                 except Exception as e:
@@ -169,8 +209,8 @@ with st.sidebar:
     st.markdown("**⚙️ Cài đặt hiện tại:**")
     st.info(
         f"🧠 **LLM:** {st.session_state['llm_model']}\n\n"
-        f"📐 **Embedding:** {st.session_state['embedding_model']}\n\n"
-        f"💼 **Strategy:** {st.session_state['strategy_choice']}\n\n"
+        f"📂 **Indexing:** {st.session_state['indexing_strategy']}\n\n"
+        f"💼 **Query:** {st.session_state['strategy_choice']}\n\n"
         f"🖥 **Hiển thị:** {st.session_state['display_mode']}"
     )
     if st.button("✏️ Thay đổi cài đặt", use_container_width=True):
@@ -195,13 +235,14 @@ if prompt := st.chat_input("Hỏi gì đó (Ví dụ: So sánh hạn sử dụng
             
         # Khởi tạo Engine nếu đã Ready
         with st.chat_message("assistant"):
-            db_manager = ChromaManager(
-                collection_name="legal_compare",
-                embedding_model=st.session_state.get("embedding_model", "qwen3-embedding:8b")
-            )
+            if "active_indexer" not in st.session_state:
+                st.error("Không tìm thấy bộ nhớ. Vui lòng nhấn 'Khởi tạo Hệ thống RAG' bên trái trước.")
+                st.stop()
+                
+            indexer = st.session_state["active_indexer"]
             llm_client = LLMClient(model_name=st.session_state.get("llm_model", "qwen3:8b"))
             rag_engine = LegalRAGEngine(
-                db_manager=db_manager,
+                indexing_strategy=indexer,
                 llm_client=llm_client,
                 old_law_source=st.session_state["old_law_name"],
                 new_law_source=st.session_state["new_law_name"]

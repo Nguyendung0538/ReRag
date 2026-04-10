@@ -56,24 +56,27 @@ def _decompose_query(llm, query: str) -> List[str]:
 
 
 def _query_both_sources(
-    db, sub_query: str, old_law: str, new_law: str, per_k: int
+    indexing_strategy, sub_query: str, old_law: str, new_law: str, per_k: int
 ) -> List[Dict[str, Any]]:
     """
-    Với mỗi sub-query, truy vấn ChromaDB 2 lần — một lần filter theo tài liệu cũ,
+    Với mỗi sub-query, truy vấn IndexingStrategy 2 lần — một lần filter theo tài liệu cũ,
     một lần filter theo tài liệu mới — để đảm bảo bao phủ đủ cả 2 nguồn.
     """
     results = []
     for source in [old_law, new_law]:
         if source:
             try:
-                r = db.query(sub_query, n_results=per_k, where={"source": source})
-                results.append(r)
+                r = indexing_strategy.build_context(sub_query, top_k=per_k, where={"source": source})
+                # Tránh các list trống
+                if r.get("documents") and r["documents"][0]:
+                    results.append(r)
             except Exception:
-                # Fallback nếu source không tồn tại trong DB (ChromaDB raises on empty where)
                 pass
     # Nếu cả 2 filter không tìm được gì, fallback về query không filter
     if not results:
-        results = [db.query(sub_query, n_results=per_k)]
+        r = indexing_strategy.build_context(sub_query, top_k=per_k)
+        if r.get("documents") and r["documents"][0]:
+            results.append(r)
     return results
 
 
@@ -141,7 +144,7 @@ class DecomposeV1Strategy(QueryStrategy):
         all_results: List[Dict[str, Any]] = []
 
         for sq in subqueries:
-            results_for_sq = _query_both_sources(engine.db, sq, old_law, new_law, per_k)
+            results_for_sq = _query_both_sources(engine.indexing_strategy, sq, old_law, new_law, per_k)
             all_results.extend(results_for_sq)
 
         # ── Bước 3: Gộp và loại trùng lặp ───────────────────────────────────

@@ -14,7 +14,7 @@ class NormalV1Strategy(QueryStrategy):
     """
     def stream_execute(self, query: str, engine, top_k: int = 6) -> Iterator[str]:
         # Truy xuất cơ sở dữ liệu với nguyên câu hỏi gốc
-        results = engine.db.query(query, n_results=top_k)
+        results = engine.indexing_strategy.build_context(query, top_k=top_k)
         
         docs = results.get("documents", [[]])[0]
         
