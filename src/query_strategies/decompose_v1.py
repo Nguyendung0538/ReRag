@@ -3,25 +3,23 @@ from typing import Iterator, List, Dict, Any
 from .base_strategy import QueryStrategy
 
 
-# ─── Prompt phân rã câu hỏi thành ASPECT-BASED sub-queries ────────────────────
-# Không nhắc tên tài liệu trong sub-query để tránh ChromaDB kéo các điều khoản
-# không liên quan (VD: Lời nói đầu, phạm vi áp dụng) chỉ vì trùng tên document.
-DECOMPOSE_PROMPT = """Bạn là chuyên gia xây dựng truy vấn tìm kiếm pháp lý.
+DECOMPOSE_PROMPT = """Bạn là chuyên gia hiểu ý định tìm kiếm (Search Intent) pháp lý.
 
-Nhiệm vụ: Phân rã câu hỏi so sánh pháp lý dưới đây thành TỐI ĐA 4 sub-queries.
-Mỗi sub-query phải nhắm đến một KHÍA CẠNH CỤ THỂ của nội dung (điều kiện, thủ tục, độ tuổi, thời hạn, đối tượng...).
+Nhiệm vụ: Phân rã câu hỏi dưới đây thành các câu truy vấn con (sub-queries) để hệ thống RAG tìm kiếm dễ nhất.
 
 Câu hỏi gốc: "{query}"
 
-YÊU CẦU QUAN TRỌNG:
-- Viết sub-query theo dạng "tìm kiếm nội dung điều khoản" — KHÔNG nhắc tên tài liệu, không nhắc "Luật 2014" hay "Luật 2023"
-- Mỗi sub-query ngắn gọn, chứa đúng thuật ngữ pháp lý để embedding tìm đúng điều khoản
-- Phân tách theo KHÍA CẠNH khác nhau, không lặp lại
-- Ví dụ tốt: "độ tuổi được cấp thẻ căn cước", "thủ tục cấp thẻ cho người dưới 14 tuổi"
-- Ví dụ XẤU (tránh): "đối tượng cấp thẻ theo Luật 2014", "quy định Luật 2023 về..."
+QUY TẮC BẮT BUỘC (ĐỌC KỸ TRƯỚC KHI LÀM):
+1. Nếu câu hỏi siêu ngắn gọn chỉ định đích danh một Điều khoản cụ thể (VD: "điều 6 có thay đổi gì", "so sánh điều 5"): 
+   -> TUYỆT ĐỐI KHÔNG bịa thêm các khía cạnh.
+   -> TUYỆT ĐỐI KHÔNG được phép thêm các từ phụ họa dư thừa như "hiện hành", "mới", "cũ", "nội dung chính", "thay đổi".
+   -> CHỈ YÊU CẦU trả về ĐÚNG 1 sub-query CỤT NGỦN mang tên điều khoản đó (VD: ["Điều 6"]).
+2. NẾU VÀ CHỈ NẾU câu hỏi là về một CHỦ ĐỀ tổng quát phức tạp (VD: "so sánh về quy định nộp phạt"):
+   -> Mới được chia nhỏ thành các khía cạnh (VD: ["mức tiền phạt", "thời hạn nộp phạt"]).
+3. Ghi nhớ: Sub-query càng thuần túy và ngắn gọn, máy học càng dễ tìm.
 
-Trả về JSON array — CHỈ JSON thuần túy, không markdown, không giải thích:
-["sub-query 1", "sub-query 2", "sub-query 3"]"""
+Trả về mảng JSON thuần túy (KHÔNG dùng markdown, KHÔNG giải thích):
+["query 1", "query 2"]"""
 
 
 def _call_llm_sync(llm, prompt: str) -> str:
