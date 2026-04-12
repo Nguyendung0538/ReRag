@@ -56,25 +56,31 @@ def _decompose_query(llm, query: str) -> List[str]:
 
 
 def _query_both_sources(
-    indexing_strategy, sub_query: str, old_law: str, new_law: str, per_k: int
+    indexing_strategy, sub_query: str, old_law: str, new_law: str, per_k: int, base_where: dict = None
 ) -> List[Dict[str, Any]]:
     """
     Với mỗi sub-query, truy vấn IndexingStrategy 2 lần — một lần filter theo tài liệu cũ,
-    một lần filter theo tài liệu mới — để đảm bảo bao phủ đủ cả 2 nguồn.
+    một lần filter theo tài liệu mới — kết hợp filter theo Điều khoản nếu có.
     """
     results = []
     for source in [old_law, new_law]:
         if source:
+            where_clause = {"source": source}
+            if base_where:
+                where_clause = {"$and": [{"source": source}, base_where]}
             try:
-                r = indexing_strategy.build_context(sub_query, top_k=per_k, where={"source": source})
+                r = indexing_strategy.build_context(sub_query, top_k=per_k, where=where_clause)
                 # Tránh các list trống
                 if r.get("documents") and r["documents"][0]:
                     results.append(r)
             except Exception:
                 pass
-    # Nếu cả 2 filter không tìm được gì, fallback về query không filter
+    # Nếu cả 2 filter không tìm được gì, fallback về query không filter source
     if not results:
-        r = indexing_strategy.build_context(sub_query, top_k=per_k)
+        kwargs = {}
+        if base_where:
+            kwargs["where"] = base_where
+        r = indexing_strategy.build_context(sub_query, top_k=per_k, **kwargs)
         if r.get("documents") and r["documents"][0]:
             results.append(r)
     return results
@@ -139,12 +145,15 @@ class DecomposeV1Strategy(QueryStrategy):
             yield f"&nbsp;&nbsp;**[{i}]** {sq}\n"
         yield "\n"
 
+        # Định vị filter dựa vào câu hỏi chính tổng thể gốc
+        where_filter = self._extract_metadata_filter(query)
+
         # ── Bước 2: Dual-source retrieval — mỗi sub-query × 2 tài liệu ──────
         per_k = max(2, top_k // max(len(subqueries), 1))
         all_results: List[Dict[str, Any]] = []
 
         for sq in subqueries:
-            results_for_sq = _query_both_sources(engine.indexing_strategy, sq, old_law, new_law, per_k)
+            results_for_sq = _query_both_sources(engine.indexing_strategy, sq, old_law, new_law, per_k, base_where=where_filter)
             all_results.extend(results_for_sq)
 
         # ── Bước 3: Gộp và loại trùng lặp ───────────────────────────────────

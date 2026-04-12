@@ -20,3 +20,14 @@ class QueryStrategy(ABC):
             Iterator[str]: Stream các phần chữ được sinh ra từ LLM.
         """
         pass
+
+    def _extract_metadata_filter(self, query: str) -> dict | None:
+        """Phân tích câu hỏi để tự động xuất filter metadata (Ví dụ: bóc tách chính xác Điều 6)."""
+        import re
+        from src.ingestion.legal_chunker import LegalChunker
+        match = re.search(r"điều\s+([\dIVXLCDM]+)", query, re.IGNORECASE)
+        if match:
+            chunker = LegalChunker()
+            normalized = chunker._normalize_dieu_number(match.group(1))
+            return {"dieu": f"Điều {normalized}"}
+        return None

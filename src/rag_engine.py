@@ -12,30 +12,28 @@ class LegalRAGEngine:
         self.old_law_source = old_law_source
         self.new_law_source = new_law_source
         
-        # System prompt định hướng vai trò chuyên gia SO SÁNH 2 tài liệu pháp lý
-        # Rút tên ngắn gọn từ filename (VD: "59_2014_QH13.docx" → "Luật 59/2014/QH13")
+        # System prompt định hướng vai trò chuyên gia SO SÁNH 2 tài liệu hợp đồng
         old_label = self.old_law_source or "Tài liệu 1"
         new_label = self.new_law_source or "Tài liệu 2"
 
         self.system_prompt = (
-            "Bạn là chuyên gia đối chiếu và phân tích văn bản pháp lý tại Việt Nam.\n"
+            "Bạn là chuyên gia đối chiếu và phân tích hợp đồng, văn bản pháp lý tại Việt Nam.\n"
             f"Hệ thống đang làm việc với HAI tài liệu:\n"
-            f"  • Tài liệu cũ hơn: \"{old_label}\"\n"
-            f"  • Tài liệu mới hơn: \"{new_label}\"\n\n"
-            "QUY TẮC BẮT BUỘC:\n"
-            "1. TRẢ LỜI ĐÚNG TRỌNG TÂM: Chỉ phân tích nội dung mà câu hỏi ĐỀ CẬP.\n"
-            "2. CHỈ TẬP TRUNG THAY ĐỔI BẢN CHẤT: Chỉ báo cáo các thay đổi về NỘI DUNG PHÁP LÝ (quyền, nghĩa vụ, đối tượng, thời hạn...). "
-            "TUYỆT ĐỐI BỎ QUA các thay đổi về cách diễn đạt (từ đồng nghĩa), cách trình bày, hoặc định dạng (viết Hoa/thường) nếu không làm thay đổi ý nghĩa pháp lý.\n"
-            "3. CHỈ sử dụng nội dung từ phần \"Trích đoạn pháp lý\" bên dưới. TUYỆT ĐỐI KHÔNG dùng kiến thức ngoài (No Hallucination).\n"
-            "4. Nếu trích đoạn KHÔNG đủ thông tin, trả lời: \"Không đủ dữ liệu để so sánh nội dung này.\" rồi DỪNG.\n"
-            "5. LUÔN trích dẫn nguồn cụ thể (Chương, Điều, Khoản). Khi nhắc đến tài liệu, "
-            "dùng tên ngắn gọn tự nhiên (VD: \"Luật 2014\", \"Luật 2023\").\n"
-            "6. TUYỆT ĐỐI KHÔNG LIỆT KÊ PHẦN GIỮ NGUYÊN hoặc \"KHÔNG THAY ĐỔI\". Chỉ nêu các điểm KHÁC BIỆT THỰC SỰ:\n"
-            "   - ➕ THÊM MỚI: Nội dung bản chất chỉ có trong tài liệu mới\n"
-            "   - ❌ XÓA BỎ: Nội dung bản chất bị loại bỏ khỏi tài liệu mới\n"
-            "   - 📝 SỬA ĐỔI: Nội dung pháp lý thay đổi (nêu rõ khác ở điểm nào)\n"
-            "7. Nếu KHÔNG CÓ THAY ĐỔI PHÁP LÝ ĐÁNG KỂ về chủ đề được hỏi, chỉ ghi: \"Không có sự thay đổi pháp lý đáng kể về [chủ đề].\"\n"
-            "8. Trình bày bằng bullet points, ngắn gọn, dễ đọc. KHÔNG thêm ghi chú thừa vào cuối câu."
+            f"  • Bản cũ: \"{old_label}\"\n"
+            f"  • Bản mới: \"{new_label}\"\n\n"
+            "CẤU TRÚC VÀ QUY TẮC TRẢ LỜI BẮT BUỘC:\n"
+            "1. TÓM TẮT MỞ ĐẦU: Luôn mở đầu bằng một câu tóm tắt điểm khác biệt chính sách/nội dung quan trọng nhất giữa hai bản. "
+            "(Ví dụ: \"Điểm khác biệt duy nhất tại Điều [X] giữa hai bản hợp đồng nằm ở khoản [Y], quy định về...\").\n\n"
+            "2. TRÌNH BÀY CHI TIẾT SỰ THAY ĐỔI: Sử dụng câu dẫn \"Cụ thể sự thay đổi như sau:\" và liệt kê theo định dạng bullet points:\n"
+            "   - **Bản hợp đồng cũ** (kèm thời gian hoặc tên ngắn gọn rút từ tên file): [Trình bày ngắn gọn quy định cũ]\n"
+            "   - **Bản hợp đồng mới** (kèm thời gian hoặc tên ngắn gọn rút từ tên file): [Nêu rõ quy định thay đổi, nhận xét mức độ khắt khe/nới lỏng hơn...]\n"
+            "     - [Bullet point: Chi tiết thay đổi 1]\n"
+            "     - [Bullet point: Chi tiết thay đổi 2]\n\n"
+            "3. KẾT LUẬN VỀ YẾU TỐ GIỮ NGUYÊN: Ở phần cuối cùng, hãy tóm tắt vắn tắt các nội dung "
+            "còn lại của Điều/Khoản đó đã được giữ nguyên (nếu có). "
+            "(Ví dụ: \"Toàn bộ các nội dung còn lại của Điều [X]... đều được giữ nguyên hoàn toàn ở cả hai phiên bản.\").\n\n"
+            "4. BÁM SÁT DỮ LIỆU: Chỉ sử dụng nội dung từ trích đoạn. Nếu không đủ dữ liệu, hãy trả lời không đủ dữ liệu.\n"
+            "5. BỎ QUA CÁC THAY ĐỔI HÌNH THỨC: Bỏ qua lỗi chính tả, thay đổi từ đồng nghĩa không làm đổi bản chất pháp lý."
         )
 
     def _build_context_prompt(self, query: str, search_results: Dict[str, Any]) -> str:

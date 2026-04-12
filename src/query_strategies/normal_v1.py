@@ -13,8 +13,13 @@ class NormalV1Strategy(QueryStrategy):
     - Câu hỏi đã đủ rõ ràng, chứa đúng từ khóa pháp lý
     """
     def stream_execute(self, query: str, engine, top_k: int = 6) -> Iterator[str]:
+        where_filter = self._extract_metadata_filter(query)
+        kwargs = {}
+        if where_filter:
+            kwargs["where"] = where_filter
+
         # Truy xuất cơ sở dữ liệu với nguyên câu hỏi gốc
-        results = engine.indexing_strategy.build_context(query, top_k=top_k)
+        results = engine.indexing_strategy.build_context(query, top_k=top_k, **kwargs)
         
         docs = results.get("documents", [[]])[0]
         
