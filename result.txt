@@ -1,0 +1,168 @@
+TỔNG SỐ CHUNKS: 13
+==================================================
+
+[Chunk 1]
+Metadata: {'source': 'chuyen_nhung_co_phan.docx', 'type': 'DOCX', 'dieu': 'Lời nói đầu / Căn cứ'}
+Nội dung:
+CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM
+Độc lập - Tự do - Hạnh phúc
+---------------------------
+HỢP ĐỒNG CHUYỂN NHƯỢNG CỔ PHẦN (1)
+(Số: ……………./HĐCNCP)
+Căn cứ Bộ luật Dân sự số 91/2015/QH13, ngày 14 tháng 11 năm 2015
+Căn cứ vào Luật Doanh nghiệp 2020 và các văn bản hướng dẫn thi hành;
+Căn cứ vào Điều lệ của Công ty ....................;
+Căn cứ vào nhu cầu của các bên.
+Hôm nay, ngày ……. tháng ……. năm ….., Tại
+Chúng tôi gồm có:
+BÊN CHUYỂN NHƯỢNG (BÊN A) (2):
+Là cổ đông của:
+Địa chỉ:
+Điện thoại:
+Fax:
+GCNSH/Mã số cổ đông số:
+CMND/GPĐKKD số: ................................. cấp ngày ….. tháng …. năm ..............
+Tại:
+Mã số thuế cá nhân/tổ chức:
+Số tài khoản: ....................................... tại Ngân hàng ....................................................
+Do Ông (Bà): .............................................. Sinh năm: (3) ..............................................
+Chức vụ: ................................................................................................... làm đại diện.
+CMND số: ............................. Ngày cấp ................................... Nơi cấp ......................
+BÊN NHẬN CHUYỂN NHƯỢNG (BÊN B):
+Là cổ đông của:
+Địa chỉ:
+Điện thoại:
+Fax:
+GCNSH/Mã số cổ đông số:
+CMND/GPĐKKD số: ......................................... cấp ngày ….. tháng …. năm ............
+Tại:
+Mã số thuế cá nhân/tổ chức:
+Số tài khoản: .......................................................... tại Ngân hàng ................................
+Do Ông (Bà): ................................................... Sinh năm: (3) .........................................
+Chức vụ: ................................................................................................... làm đại diện.
+CMND số: ............................... Ngày cấp .......................... Nơi cấp .............................
+Hai bên thống nhất thoả thuận nội dung hợp đồng như sau:
+--------------------------------------------------
+
+[Chunk 2]
+Metadata: {'source': 'chuyen_nhung_co_phan.docx', 'type': 'DOCX', 'dieu': 'Điều 1'}
+Nội dung:
+Điều 1: Đối tượng của hợp đồng
+Bên A đồng ý chuyển nhượng cổ phần (chứng khoán) cho bên B theo nội dung sau:
+a) Tên chứng khoán: Cổ phần
+b) Tổ chức phát hành:
+c) Loại cổ phần:
+d) Mệnh giá: ............................................................................................ đồng/cổ phần.
+e) Số lượng: ......................... cổ phần (Bằng chữ: .......................................................).
+f) Giá chuyển nhượng: ............................ đồng/cổ phần (Bằng chữ: ......................../cổ phần).
+g) Tổng giá trị giao dịch: ............................đồng (Bằng chữ: ....................................).
+--------------------------------------------------
+
+[Chunk 3]
+Metadata: {'source': 'chuyen_nhung_co_phan.docx', 'type': 'DOCX', 'dieu': 'Điều 2'}
+Nội dung:
+Điều 2: Phương thức và thời hạn thanh toán
+a) Phương thức thanh toán:
+Tổng số tiền chuyển nhượng được nêu tại Điều 1 sẽ được Bên B thanh toán cho Bên A bằng
+b) Thời hạn thanh toán:
+- Ngay sau khi hai bên ký kết hợp đồng này, Bên B sẽ đặt cọc một khoản tiền tương ứng là ………….% giá trị của Hợp đồng.
+- Sau ……… ngày, kể từ ngày ký kết hợp đồng đến ngày ……. tháng ….… năm …….. Bên B thanh toán cho Bên A khoản tiền là: ……………………..……….., khoản tiền đó đã bao gồm cả khoản đặt cọc.
+--------------------------------------------------
+
+[Chunk 4]
+Metadata: {'source': 'chuyen_nhung_co_phan.docx', 'type': 'DOCX', 'dieu': 'Điều 3'}
+Nội dung:
+Điều 3: Quyền và nghĩa vụ của Bên A
+a) Yêu cầu Bên B thực hiện nghĩa vụ thanh toán theo quy định trong Hợp đồng;
+b) Thực hiện nghĩa vụ chuyển nhượng cổ phần cho Bên B theo thỏa thuận trong Hợp đồng.
+c) Thực hiện nghĩa vụ nộp thuế theo quy định của pháp luật.
+d) Trong trường hợp Bên A vì lý do bất kỳ mà không thực hiện chuyển nhượng cổ phần theo quy định trong Hợp đồng này, sẽ phải hoàn trả số tiền đã nhận như trên và bồi thường thiệt hại cho Bên B một khoản tiền bằng ........................... % giá trị của hợp đồng này, tức ……………………….. đồng (Bằng chữ: ………………………………………)
+--------------------------------------------------
+
+[Chunk 5]
+Metadata: {'source': 'chuyen_nhung_co_phan.docx', 'type': 'DOCX', 'dieu': 'Điều 4'}
+Nội dung:
+Điều 4: Quyền và nghĩa vụ của Bên B
+a) Thanh toán đầy đủ, đúng hạn cho Bên A tổng giá trị chuyển nhượng cổ phần theo quy định tại Điều 1 của Hợp đồng này.
+b) Bên B được quyền sở hữu số cổ phần quy định tại Điều 1 của Hợp đồng này, đồng thời hưởng mọi quyền lợi phát sinh cũng như các nghĩa vụ của cổ đông theo quy định của pháp luật và Điều lệ của ……………………………. kể từ ngày được …………………………… chấp thuận và hoàn tất thủ tục chuyển tên cổ đông.
+--------------------------------------------------
+
+[Chunk 6]
+Metadata: {'source': 'chuyen_nhung_co_phan.docx', 'type': 'DOCX', 'dieu': 'Điều 5'}
+Nội dung:
+Điều 5:  Cam kết của Bên A
+Bên A cam kết rằng:
+a) Bên A  có quyền sở hữu hợp pháp số cổ phần chuyển nhượng quy đinh tại Điều 1 của Hợp đồng này và Bên A đã hoàn thành mọi thủ tục pháp lý cần thiết để chuyển nhượng cổ phần của mình;
+b) Cổ phần của Bên A đã đăng ký hợp thức, đã thanh toán đầy đủ cho ………………………….. và được phép chuyển nhượng.
+c) Bên A tiến hành thủ tục thông báo cho …………………………. được biết về việc thay đổi cổ đông, kể từ khi có xác nhận của ………………………... nếu thanh toán bằng chuyển khoản hoặc kể từ khi thanh toán hết bằng tiền mặt.
+d) Nếu hết thời hạn thanh toán mà Bên A từ chối thực hiện việc chuyển nhượng cổ phần thì Bên B được nhận lại tiền đặt cọc tại ngân hàng và Bên A phải trả cho Bên B một khoản tiền tương đương giá trị tài sản đặt cọc.
+--------------------------------------------------
+
+[Chunk 7]
+Metadata: {'source': 'chuyen_nhung_co_phan.docx', 'type': 'DOCX', 'dieu': 'Điều 6'}
+Nội dung:
+Điều 6: Cam kết của Bên B
+Bên B cam kết:
+a) Bên B sẽ kế thừa và thực hiện các quyền lợi, nghĩa vụ có liên quan của Bên A sau khi hoàn thành các cam kết theo Hợp đồng này.
+b) Thanh toán đầy đủ theo đúng tiến độ của Hợp đồng. Nếu đến hết thời hạn thực hiện thanh toán quy định tại Điều 2 của Hợp đồng này mà Bên B không thanh toán đủ hoặc không thanh toán hết thì coi như Hợp đồng này hết hiệu lực và Bên B bị mất tiền đặt cọc, trừ trường hợp quy định tại Điều 9 của Hợp đồng.
+--------------------------------------------------
+
+[Chunk 8]
+Metadata: {'source': 'chuyen_nhung_co_phan.docx', 'type': 'DOCX', 'dieu': 'Điều 7'}
+Nội dung:
+Điều 7: Thay đổi và bổ sung các điều khoản của Hợp đồng
+- Trên đây là toàn bộ thoả thuận giữa các bên liên quan đến các vấn đề quy định tại Hợp đồng.
+- Mọi sửa đổi, bổ sung nào của Hợp đồng này có giá trị khi được lập bằng văn bản và có chữ ký của các bên.
+- Nếu một quy định bất kỳ của Hợp đồng bị Toà án tuyên bố vô hiệu hoặc không thực thi được, các bên sẽ xem như tất cả các quy định còn lại của Hợp đồng này có giá trị, thực thi được và được các bên tuân thủ.
+--------------------------------------------------
+
+[Chunk 9]
+Metadata: {'source': 'chuyen_nhung_co_phan.docx', 'type': 'DOCX', 'dieu': 'Điều 8'}
+Nội dung:
+Điều 8: Kế thừa
+- Các bên cam kết bản thân mình và các cá nhân, tổ chức kế thừa quyền lợi và trách nhiệm của các bên sẽ thực hiện nghiêm túc các quy định trong Hợp đồng này mà không có bất kỳ khiếu nại nào;
+- Hợp đồng này có giá trị bắt buộc và có hiệu lực đối với các bên và bên kế thừa, không có bất kỳ một sự rút lui không thực hiện các cam kết trong hợp đồng này mà không có sự thoả thuận giữa các bên.
+--------------------------------------------------
+
+[Chunk 10]
+Metadata: {'source': 'chuyen_nhung_co_phan.docx', 'type': 'DOCX', 'dieu': 'Điều 9'}
+Nội dung:
+Điều 9: Các sự cố vi phạm:
+- Do giá trị của Công ty chưa được kiểm toán, nên Bên B yêu cầu Bên A cam kết Bảng danh mục tài sản của Công ty đã được Hội đồng quản trị xác nhận tại Phụ Lục của Hợp đồng này như sau: Tương ứng với số tài sản của Công ty tại Bảng danh mục tài sản thì giá của một cổ phần của Công ty cổ phần …………………………………. là .................................................
+- Trong thời gian là một tháng kể từ ngày đặt cọc, nếu Bên B phát hiện số lượng tài sản của Công ty cổ phần ……………………... trong Bảng danh mục tài sản của Công ty cổ phần ………………………….… giảm xuống hoặc tăng lên, thì các bên phải xác định lại giá trị của một cổ phần ở tại thời điểm đặt cọc và Bên B thanh toán cho Bên A theo đúng thời hạn, với giá đã được điều chỉnh. Ngoài thời gian này, coi như Hợp đồng đã được thực hiện và không có bất kỳ sự điều chỉnh giá nào khác.
+--------------------------------------------------
+
+[Chunk 11]
+Metadata: {'source': 'chuyen_nhung_co_phan.docx', 'type': 'DOCX', 'dieu': 'Điều 10'}
+Nội dung:
+Điều 10: Thông báo
+a) Bất kỳ thông báo, yêu cầu, thông tin, mọi thay đổi về trách nhiệm, nghĩa vụ và quyền lợi trong các điều khoản đã thỏa thuận, khiếu nại phát sinh liên quan đến Hợp đồng này phải được lập thành văn bản bằng Tiếng Việt và gửi đến các địa chỉ ở phần đầu Hợp đồng này hoặc địa chỉ thay đổi sau này theo thông báo của Hai Bên.
+b) Trong trường hợp không có thỏa thuận khác, tất cả các thông báo sẽ được gửi qua bưu điện hoặc giao trực tiếp. Khi bưu điện không phát thư được vì bất kỳ lý do gì thì Bên thông báo sẽ thông tin cho Bên kia được biết và gửi thông báo bằng fax hoặc thư điện tử cho Bên kia. Trong một số trường hợp đặc biệt khẩn cấp, một trong Hai Bên đồng ý hình thức thông báo cho Bên kia bằng điện thoại trực tiếp.
+c) Hai Bên thống nhất rằng, các thông báo, yêu cầu, thông tin, khiếu nại được coi là đã nhận nếu đúng địa chỉ, đúng tên người nhận, đúng hình thức thông báo theo thỏa thuận tại Khoản a), b) nêu trên và thời gian được xác định như sau:
+(i).Khi giao trực tiếp: là ngày gửi và có chữ ký của người nhận thông báo;
+(ii) Khi gửi qua bưu điện: sau 02 (hai) ngày làm việc kể từ ngày đóng dấu bưu điện đến;
+(iii) Khi gửi qua fax: là thời điểm Bên đó nhận được được tín hiệu chuyển fax thành công;
+(iv) Trong các trường hợp này, nếu ngày tương ứng rơi vào ngày chủ nhật hoặc ngày lễ của Việt Nam thì các thông báo, yêu cầu, khiếu nại hoặc thư từ giao dịch… nói trên sẽ được xem như bên kia nhận được vào ngày kế tiếp.
+d) Hai Bên phải thông báo bằng văn bản cho nhau biết nếu có đề nghị thay đổi địa chỉ, hình thức, tên người nhận thông báo…Nếu Bên có thay đổi không thông báo lại cho Bên kia biết thì Bên gửi thông báo không chịu trách nhiệm về việc Bên có thay đổi không nhận được các văn bản thông báo.
+--------------------------------------------------
+
+[Chunk 12]
+Metadata: {'source': 'chuyen_nhung_co_phan.docx', 'type': 'DOCX', 'dieu': 'Điều 11'}
+Nội dung:
+Điều 11: Giải quyết tranh chấp:
+Mọi tranh chấp liên quan và/hoặc phát sinh từ Hợp Đồng này sẽ được bàn bạc giải quyết trên tinh thần thương lượng, hòa giải giữa Các Bên. Trong trường hợp không thể giải quyết thông qua thương lượng hòa giải, mỗi Bên có thể đưa tranh chấp ra để giải quyết tại Trung tâm Trọng tài Thương mại Miền Trung (MCAC) theo Quy tắc tố tụng trọng tài của Trung tâm này. Địa điểm tiến hành trọng tài tại thành phố Đà Nẵng. Ngôn ngữ dùng trong tố tụng trọng tài là tiếng Việt.
+--------------------------------------------------
+
+[Chunk 13]
+Metadata: {'source': 'chuyen_nhung_co_phan.docx', 'type': 'DOCX', 'dieu': 'Điều 12'}
+Nội dung:
+Điều 12: Điều khoản thi hành
+a) Hai Bên đã hiểu rõ quyền, nghĩa vụ và lợi ích hợp pháp của mình phát sinh từ việc ký kết và thực hiện Hợp đồng này.
+b) Trong thời gian thực hiện Hợp đồng, nếu có phát sinh vấn đề mới, hai bên sẽ cùng nhau bàn bạc và ký phụ lục bổ sung.
+c) Hợp đồng này có hiệu lực kể từ ngày ....................................... chấp thuận việc chuyển nhượng.
+d) Hợp đồng gồm 03 (ba) trang và được lập thành 03 (ba) bản có giá trị pháp lý như nhau, mỗi Bên giữ 01 (một) bản, 01 (một) bản lưu tại ..........................................................................
+..................., ngày.....tháng.....năm........
+BÊN CHUYỂN NHƯỢNG (Ký, ghi rõ họ tên và đóng dấu) | BÊN NHẬN CHUYỂN NHƯỢNG (Ký, ghi rõ họ tên và đóng dấu)
+XÁC NHẬN CỦA CÔNG TY…………….. (Ký, ghi rõ họ tên và đóng dấu)
+--------------------------------------------------
+
