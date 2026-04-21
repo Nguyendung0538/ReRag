@@ -11,7 +11,7 @@ from src.indexing_strategies import INDEXING_STRATEGIES
 st.set_page_config(page_title="Hệ thống Trợ lý Pháp lý RAG", page_icon="⚖️", layout="wide")
 
 # ==================== CẤU HÌNH MODEL OLLAMA ====================
-LLM_MODEL = "gemma4:e2b"
+LLM_MODEL = "gemma4:e4b"
 EMBEDDING_MODEL = "qwen3-embedding:8b"
 
 # ==================== SESSION STATE ====================
@@ -27,8 +27,7 @@ if "strategy_choice" not in st.session_state:
     st.session_state["strategy_choice"] = list(STRATEGIES.keys())[0]
 if "indexing_strategy" not in st.session_state:
     st.session_state["indexing_strategy"] = list(INDEXING_STRATEGIES.keys())[0]
-if "display_mode" not in st.session_state:
-    st.session_state["display_mode"] = "Hiển thị Nhanh (Buffered Stream)"
+
 if "llm_model" not in st.session_state:
     st.session_state["llm_model"] = LLM_MODEL
 if "embedding_model" not in st.session_state:
@@ -63,22 +62,12 @@ def show_settings():
 
     st.divider()
 
-    # ── Display Mode ─────────────────────────────────────────────────────────
-    st.subheader("🖥️ Tốc độ Hiển thị")
-    st.caption("Buffered Stream cho chữ chạy liên tục. Instant gom hết rồi hiện 1 lần.")
-    chosen_mode = st.radio(
-        "Chế độ:",
-        options=["Hiển thị Nhanh (Buffered Stream)", "Hiển thị Ngay (Instant)"],
-        index=0 if st.session_state["display_mode"] == "Hiển thị Nhanh (Buffered Stream)" else 1
-    )
 
-    st.divider()
     col_save, col_cancel = st.columns(2)
     with col_save:
         if st.button("💾 Lưu cài đặt", type="primary", use_container_width=True):
             st.session_state["strategy_choice"] = chosen_strategy
             st.session_state["indexing_strategy"] = chosen_idx_strat
-            st.session_state["display_mode"] = chosen_mode
             
             # Reset DB nếu đổi thông số quan trọng
             if chosen_idx_strat != st.session_state.get("indexing_strategy", ""):
@@ -161,8 +150,7 @@ with st.sidebar:
     st.info(
         f"🧠 **LLM:** {st.session_state['llm_model']}\n\n"
         f"📂 **Indexing:** {st.session_state['indexing_strategy']}\n\n"
-        f"💼 **Query:** {st.session_state['strategy_choice']}\n\n"
-        f"🖥 **Hiển thị:** {st.session_state['display_mode']}"
+        f"💼 **Query:** {st.session_state['strategy_choice']}"
     )
     if st.button("✏️ Thay đổi cài đặt", use_container_width=True):
         show_settings()
@@ -200,35 +188,17 @@ if prompt := st.chat_input("Hỏi gì đó (Ví dụ: So sánh hạn sử dụng
             )
             
             chosen_strategy = st.session_state.get("strategy_choice", "Normal_v1 (Raw Query)")
-            display_mode = st.session_state.get("display_mode", "Hiển thị Nhanh (Buffered Stream)")
-            
             start_time = time.time()
             
-            if display_mode == "Hiển thị Ngay (Instant)":
-                with st.spinner(""):
-                    full_text = ""
-                    for chunk_text in rag_engine.stream_ask(query=prompt, strategy_name=chosen_strategy, top_k=6):
-                        full_text += chunk_text
-                    
-                    st.markdown(full_text)
-                    end_time = time.time()
-                    st.caption(f"🕒 Thời gian phản hồi: {end_time - start_time:.2f} giây")
-                    full_response = full_text + f"\n\n🕒 Thời gian phản hồi: {end_time - start_time:.2f} giây"
-            else:
-                def generate_reply():
-                    buffer = ""
-                    for chunk_text in rag_engine.stream_ask(query=prompt, strategy_name=chosen_strategy, top_k=6):
-                        buffer += chunk_text
-                        if len(buffer) >= 20:
-                            yield buffer
-                            buffer = ""
-                    if buffer:
-                        yield buffer
-                        
-                full_response_text = st.write_stream(generate_reply)
+            with st.spinner("Đang suy nghĩ..."):
+                full_text = ""
+                for chunk_text in rag_engine.stream_ask(query=prompt, strategy_name=chosen_strategy, top_k=6):
+                    full_text += chunk_text
+                
+                st.markdown(full_text)
                 end_time = time.time()
                 st.caption(f"🕒 Thời gian phản hồi: {end_time - start_time:.2f} giây")
-                full_response = full_response_text + f"\n\n🕒 Thời gian phản hồi: {end_time - start_time:.2f} giây"
+                full_response = full_text + f"\n\n🕒 Thời gian phản hồi: {end_time - start_time:.2f} giây"
                 
         # Lưu câu trả lời của Trợ lý vào session
         st.session_state["messages"].append({"role": "assistant", "content": full_response})
