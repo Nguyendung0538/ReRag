@@ -10,20 +10,9 @@ from src.indexing_strategies import INDEXING_STRATEGIES
 
 st.set_page_config(page_title="Hệ thống Trợ lý Pháp lý RAG", page_icon="⚖️", layout="wide")
 
-# ==================== HELPER: LẤY DANH SÁCH MODEL OLLAMA ====================
-@st.cache_data(ttl=60)  # Cache 60 giây, tránh gọi API liên tục mỗi lần re-render
-def get_ollama_models() -> list[str]:
-    """Lấy danh sách tất cả model đang có trong Ollama cục bộ."""
-    try:
-        import ollama
-        models = ollama.list()
-        # ollama.list() trả về dict với key "models", mỗi item có key "model"
-        return sorted([m["model"] for m in models.get("models", [])])
-    except Exception:
-        return ["qwen3:8b", "qwen3-embedding:8b"]  # Fallback nếu Ollama không phản hồi
-
-# Lấy danh sách model 1 lần khi app khởi động
-_all_models = get_ollama_models()
+# ==================== CẤU HÌNH MODEL OLLAMA ====================
+LLM_MODEL = "gemma4:e2b"
+EMBEDDING_MODEL = "qwen3-embedding:8b"
 
 # ==================== SESSION STATE ====================
 if "messages" not in st.session_state:
@@ -40,13 +29,10 @@ if "indexing_strategy" not in st.session_state:
     st.session_state["indexing_strategy"] = list(INDEXING_STRATEGIES.keys())[0]
 if "display_mode" not in st.session_state:
     st.session_state["display_mode"] = "Hiển thị Nhanh (Buffered Stream)"
-# Mặc định chọn model phù hợp nhất nếu có, không thì lấy model đầu tiên
 if "llm_model" not in st.session_state:
-    preferred_llm = next((m for m in _all_models if "qwen3" in m and "embedding" not in m), _all_models[0] if _all_models else "qwen3:8b")
-    st.session_state["llm_model"] = preferred_llm
+    st.session_state["llm_model"] = LLM_MODEL
 if "embedding_model" not in st.session_state:
-    preferred_emb = next((m for m in _all_models if "embedding" in m), _all_models[0] if _all_models else "qwen3-embedding:8b")
-    st.session_state["embedding_model"] = preferred_emb
+    st.session_state["embedding_model"] = EMBEDDING_MODEL
 
 # ==================== SETTINGS MODAL ====================
 @st.dialog("⚙️ Cài đặt Hệ thống RAG")
@@ -64,40 +50,7 @@ def show_settings():
 
     st.divider()
     
-    # ── Model Selection ──────────────────────────────────────────────────────
-    st.subheader("🤖 Lựa chọn Model Ollama")
 
-    all_models = get_ollama_models()
-    if not all_models:
-        st.warning("Không kết nối được Ollama. Hãy đảm bảo `ollama serve` đang chạy.")
-
-    col_llm, col_emb = st.columns(2)
-    with col_llm:
-        llm_idx = all_models.index(st.session_state["llm_model"]) if st.session_state["llm_model"] in all_models else 0
-        chosen_llm = st.selectbox(
-            "🧠 LLM (sinh câu trả lời):",
-            options=all_models,
-            index=llm_idx,
-            help="Model dùng để lập luận và sinh văn bản. Khuyến nghị: qwen3:8b"
-        )
-    with col_emb:
-        emb_idx = all_models.index(st.session_state["embedding_model"]) if st.session_state["embedding_model"] in all_models else 0
-        
-        if is_vectorless:
-            st.info("⚠️ Vectorless RAG: Không cần dùng Embedding Model.")
-            chosen_emb = st.session_state.get("embedding_model", all_models[0] if all_models else "qwen3-embedding:8b")
-        else:
-            chosen_emb = st.selectbox(
-                "📐 Embedding (nhúng văn bản):",
-                options=all_models,
-                index=emb_idx,
-                help="Model dùng để tạo vector. Khuyến nghị: qwen3-embedding:8b"
-            )
-
-    if chosen_llm == chosen_emb and not is_vectorless:
-        st.warning("⚠️ LLM và Embedding đang dùng cùng 1 model — sẽ tranh VRAM, có thể chậm hơn.")
-
-    st.divider()
 
     # ── Query Strategy ───────────────────────────────────────────────────────
     st.subheader("📐 Kiến trúc Truy vấn")
@@ -123,14 +76,12 @@ def show_settings():
     col_save, col_cancel = st.columns(2)
     with col_save:
         if st.button("💾 Lưu cài đặt", type="primary", use_container_width=True):
-            st.session_state["llm_model"] = chosen_llm
-            st.session_state["embedding_model"] = chosen_emb
             st.session_state["strategy_choice"] = chosen_strategy
             st.session_state["indexing_strategy"] = chosen_idx_strat
             st.session_state["display_mode"] = chosen_mode
             
             # Reset DB nếu đổi thông số quan trọng
-            if chosen_emb != st.session_state.get("embedding_model", chosen_emb) or chosen_idx_strat != st.session_state.get("indexing_strategy", ""):
+            if chosen_idx_strat != st.session_state.get("indexing_strategy", ""):
                 st.session_state["db_ready"] = False
                 st.info("ℹ️ Cài đặt cốt lõi thay đổi — cần Khởi tạo lại RAG.")
             st.rerun()

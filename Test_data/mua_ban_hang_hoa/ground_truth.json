@@ -1,0 +1,23 @@
+{
+    "pair_id": "pair_05",
+    "v1_file": "v1_mua_ban_hang_hoa.docx",
+    "v2_file": "v2_mua_ban_hang_hoa.docx",
+    "changes": [
+        {
+            "id": "c1",
+            "type": "value_change",
+            "location": "Điều 13.3",
+            "v1_text": "30 ngày",
+            "v2_text": "20 ngày",
+            "description": "Rút ngắn thời hạn từ 30 xuống 20 ngày"
+        },
+        {
+            "id": "c2",
+            "type": "method_change",
+            "location": "Điều 14",
+            "v1_text": "Trung tâm Trọng tài Thương mại Miền Trung (MCAC)",
+            "v2_text": "Tòa án nhân dân có thẩm quyền",
+            "description": "Thay đổi phương thức giải quyết tranh chấp từ trọng tài sang tòa án"
+        }
+    ]
+}

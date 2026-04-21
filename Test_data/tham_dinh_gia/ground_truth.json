@@ -1,0 +1,23 @@
+{
+    "pair_id": "pair_03",
+    "v1_file": "v1_tham_dinh_gia.docx",
+    "v2_file": "v2_tham_dinh_gia.docx",
+    "changes": [
+        {
+            "id": "c1",
+            "type": "location_change",
+            "location": "Bên B - Địa chỉ",
+            "v1_text": "quận Hai Bà Trưng",
+            "v2_text": "quận Cầu Giấy",
+            "description": "Thay đổi địa chỉ của Bên B"
+        },
+        {
+            "id": "c2",
+            "type": "constraint_change",
+            "location": "Điều 7",
+            "v1_text": "kịp thời thông báo",
+            "v2_text": "thông báo trong vòng 03 ngày làm việc",
+            "description": "Cụ thể hóa thời hạn thông báo từ 'kịp thời' thành 03 ngày làm việc"
+        }
+    ]
+}

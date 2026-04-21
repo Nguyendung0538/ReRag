@@ -1,0 +1,23 @@
+{
+    "pair_id": "pair_02",
+    "v1_file": "v1_dai_ly.docx",
+    "v2_file": "v2_dai_ly.docx",
+    "changes": [
+        {
+            "id": "c1",
+            "type": "entity_change",
+            "location": "Điều 12",
+            "v1_text": "Trung tâm Trọng tài Thương mại Miền Trung (MCAC)",
+            "v2_text": "Trung tâm Trọng tài Quốc tế Việt Nam (VIAC)",
+            "description": "Thay đổi tổ chức trọng tài giải quyết tranh chấp"
+        },
+        {
+            "id": "c2",
+            "type": "location_change",
+            "location": "Điều 12",
+            "v1_text": "thành phố Đà Nẵng",
+            "v2_text": "TP. Hồ Chí Minh",
+            "description": "Thay đổi địa điểm giải quyết tranh chấp"
+        }
+    ]
+}

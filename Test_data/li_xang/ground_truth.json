@@ -1,0 +1,23 @@
+{
+    "pair_id": "pair_04",
+    "v1_file": "v1_li_xang.docx",
+    "v2_file": "v2_li_xang.docx",
+    "changes": [
+        {
+            "id": "c1",
+            "type": "value_change",
+            "location": "Điều 12.4",
+            "v1_text": "30 ngày",
+            "v2_text": "15 ngày",
+            "description": "Rút ngắn thời hạn từ 30 xuống 15 ngày"
+        },
+        {
+            "id": "c2",
+            "type": "value_change",
+            "location": "Điều 13.4",
+            "v1_text": "04 bản",
+            "v2_text": "06 bản",
+            "description": "Tăng số lượng bản hợp đồng từ 4 lên 6"
+        }
+    ]
+}

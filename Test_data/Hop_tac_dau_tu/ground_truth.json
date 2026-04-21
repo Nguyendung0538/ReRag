@@ -1,0 +1,23 @@
+{
+    "pair_id": "pair_01",
+    "v1_file": "v1_hop_tac_dau_tu.docx",
+    "v2_file": "v2_hop_tac_dau_tu.docx",
+    "changes": [
+        {
+            "id": "c1",
+            "type": "modification",
+            "location": "Điều 18.3",
+            "v1_text": "bằng văn bản",
+            "v2_text": "bằng văn bản và phải được công chứng",
+            "description": "Bổ sung yêu cầu công chứng khi thông báo bằng văn bản"
+        },
+        {
+            "id": "c2",
+            "type": "value_change",
+            "location": "Điều 19.3",
+            "v1_text": "02 bản",
+            "v2_text": "04 (bốn) bản",
+            "description": "Tăng số lượng bản hợp đồng từ 2 lên 4"
+        }
+    ]
+}
