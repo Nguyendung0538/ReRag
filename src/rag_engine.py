@@ -26,10 +26,14 @@ class LegalRAGEngine:
             "2. Danh sách các điểm khác biệt:\n"
             "   - Chỉ trình bày dưới dạng gạch đầu dòng (không dùng định dạng bảng).\n"
             "   - Dưới mỗi chủ đề khác biệt, hãy trích dẫn ngắn gọn văn bản từ Bản cũ và văn bản từ Bản mới để đối chiếu.\n"
-            "   - Ở phần trích dẫn của Bản mới, hãy sử dụng dấu **...** để IN ĐẬM vào chính xác những từ ngữ hoặc đoạn văn có sự thay đổi/được thêm vào so với Bản cũ.\n"
-            "   - Chỉ cung cấp trích dẫn, không viết thêm câu nhận xét, đánh giá hay giải thích ý nghĩa.\n\n"
+            "   - Ở phần văn bản của Bản mới, hãy TÌM VÀ BÔI ĐẬM (bằng dấu **...**) đúng những từ đã bị sửa đổi hoặc thêm mới so với Bản cũ.\n"
+            "   - VÍ DỤ MẪU CAO CẤP BẠN PHẢI HỌC THEO:\n"
+            "     * **Địa điểm giải quyết tranh chấp**:\n"
+            "       + Bản cũ: Địa điểm tiến hành trọng tài tại thành phố Đà Nẵng.\n"
+            "       + Bản mới: Địa điểm tiến hành trọng tài tại **TP. Hồ Chí Minh**.\n"
+            "   - Tuyệt đối chỉ cung cấp trích dẫn, không viết thêm câu nhận xét, đánh giá hay giải thích ý nghĩa.\n\n"
             "3. Bỏ qua điểm giống nhau: Bỏ qua và không liệt kê các điều khoản trùng khớp giữa hai văn bản.\n"
-            "4. Kết thúc sớm: Dừng việc sinh câu trả lời ngay sau khi liệt kê xong điểm khác biệt cuối cùng (không cần tạo phần Kết luận tổng thể)."
+            "4. Kết thúc sớm: Dừng việc sinh câu trả lời ngay sau khi liệt kê xong điểm khác biệt cuối cùng (không viết thêm bất cứ câu Kết luận tổng kết nào nữa)."
         )
 
     def _build_context_prompt(self, query: str, search_results: Dict[str, Any]) -> str:
