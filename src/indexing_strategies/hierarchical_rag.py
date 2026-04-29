@@ -12,12 +12,12 @@ class HierarchicalRAGIndexing(BaseIndexingStrategy):
     
     Khắc phục điểm yếu của Vectorless RAG bằng cách DÙNG LẠI VECTOR EMBEDDING, kết hợp với LLM Summary.
     1. Indexing:
-       - Gom các chunk thành các cụm theo (Nguồn + Chương).
-       - Nhờ LLM tóm tắt từng Chương, lưu Vector Tóm Tắt vào ChromaDB `summaries_col`.
+       - Gom các chunk thành các cụm theo (Nguồn + Điều khoản).
+       - Nhờ LLM tóm tắt từng Điều, lưu Vector Tóm Tắt vào ChromaDB `summaries_col`.
        - Nạp Vector toàn bộ văn bản chi tiết vào ChromaDB `details_col`.
     2. Retrieval:
-       - Tìm câu hỏi bằng Vector trên `summaries_col` để khoanh vùng đúng 1-2 Chương tiềm năng nhất.
-       - Tìm lại lần 2 bằng Vector trên `details_col` (nhưng ép vào filter của các Chương đã khoanh vùng).
+       - Tìm câu hỏi bằng Vector trên `summaries_col` để khoanh vùng đúng 1-2 Điều tiềm năng nhất.
+       - Tìm lại lần 2 bằng Vector trên `details_col` (nhưng ép vào filter của các Điều đã khoanh vùng).
     """
     def __init__(self, embedding_model: str = "qwen3-embedding:8b", llm_model: str = "qwen3:8b", db_name="hierarchical_rag"):
         self.embedding_model = embedding_model
@@ -42,13 +42,13 @@ class HierarchicalRAGIndexing(BaseIndexingStrategy):
         if not chunks:
             return False
             
-        print("[Hybrid RAG] Đang phân nhóm dữ liệu rễ/nhánh...")
-        # Gom text vào các nhóm (source, chuong)
+        print("[Hybrid RAG] Đang phân nhóm dữ liệu theo Điều khoản...")
+        # Gom text vào các nhóm (source, dieu)
         groups = defaultdict(list)
         for chunk in chunks:
             src = chunk.metadata.get("source", "Không rõ")
-            chuong = chunk.metadata.get("chuong", "Không xác định")
-            groups[(src, chuong)].append(chunk)
+            dieu = chunk.metadata.get("dieu", "Không xác định")
+            groups[(src, dieu)].append(chunk)
 
         llm = LLMClient(model_name=self.llm_model)
         summaries_docs = []
@@ -57,9 +57,9 @@ class HierarchicalRAGIndexing(BaseIndexingStrategy):
         
         idx = 0
         total_groups = len(groups)
-        for (src, chuong), group_chunks in groups.items():
+        for (src, dieu), group_chunks in groups.items():
             idx += 1
-            print(f"[Hybrid RAG] Sinh Tóm tắt nhanh cho Vector: {src} - {chuong} ({idx}/{total_groups})")
+            print(f"[Hybrid RAG] Sinh Tóm tắt nhanh cho Vector: {src} - {dieu} ({idx}/{total_groups})")
             
             # Giới hạn text đầu vào ~6000 ký tự để nạp LLM tạo tóm tắt nhanh
             full_text = "\n".join([c.text for c in group_chunks])
@@ -73,8 +73,8 @@ class HierarchicalRAGIndexing(BaseIndexingStrategy):
             summary_ans = llm.generate_response(prompt=prompt, system_prompt="Bạn là trợ lý pháp lý tóm tắt văn bản.")
             
             summaries_docs.append(summary_ans)
-            summaries_metas.append({"source": src, "chuong": chuong})
-            summaries_ids.append(f"summary_{src}_{chuong}_{idx}")
+            summaries_metas.append({"source": src, "dieu": dieu})
+            summaries_ids.append(f"summary_{src}_{dieu}_{idx}")
 
         print("[Hybrid RAG] Nạp cấu trúc Vector Tổng phân lớp Details...")
         self.db_manager.add_documents(chunks)
@@ -97,32 +97,32 @@ class HierarchicalRAGIndexing(BaseIndexingStrategy):
     def build_context(self, query: str, top_k: int = 5, **kwargs) -> Dict[str, Any]:
         where = kwargs.get('where', None)
         
-        # 1. Tìm summaries vector embedding
+        # 1. Tìm summaries vector embedding để khoanh vùng Điều liên quan
         query_vector = self.db_manager.embedder.embed_text(query)
         sum_kwargs = dict(
             query_embeddings=[query_vector],
-            n_results=10 # Tìm 10 chương liên quan nhất nhờ vector tóm tắt để không bỏ sót các tài liệu cũ
+            n_results=10  # Tìm 10 Điều liên quan nhất nhờ vector tóm tắt để không bỏ sót
         )
         if where:
             sum_kwargs["where"] = where
             
         sum_results = self.summaries_col.query(**sum_kwargs)
         
-        target_chuongs = set()
+        target_dieus = set()
         retrieved_metas = sum_results.get("metadatas", [[]])[0]
         for meta in retrieved_metas:
-            if "chuong" in meta:
-                target_chuongs.add(meta["chuong"])
+            if "dieu" in meta:
+                target_dieus.add(meta["dieu"])
                 
-        # 2. Truy vấn Details Collection
-        if target_chuongs:
+        # 2. Truy vấn Details Collection, filter theo các Điều đã khoanh vùng
+        if target_dieus:
             combined_where = {}
             if where:
                 combined_where.update(where)
-            if len(target_chuongs) == 1:
-                combined_where["chuong"] = list(target_chuongs)[0]
+            if len(target_dieus) == 1:
+                combined_where["dieu"] = list(target_dieus)[0]
             else:
-                combined_where["chuong"] = {"$in": list(target_chuongs)}
+                combined_where["dieu"] = {"$in": list(target_dieus)}
                 
             det_kwargs = dict(
                 query_embeddings=[query_vector],

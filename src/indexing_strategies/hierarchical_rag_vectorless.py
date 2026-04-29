@@ -14,7 +14,7 @@ class HierarchicalRAGIndexing(BaseIndexingStrategy):
     1. Lập chỉ mục (Indexing):
        Không dùng Embedding/ChromaDB. Thay vào đó, phân vùng tài liệu thành một
        Cây Mục lục (Table of Contents / Tree) nhỏ gọn lưu trên RAM. Gán ID cho mỗi Điều.
-       Mỗi node chứa: ID, Source, Chương, Mục, Điều và 120 ký tự trích dẫn nội dung (preview).
+       Mỗi node chứa: ID, Source, Điều và 120 ký tự trích dẫn nội dung (preview).
        
     2. Truy xuất ngang (Retrieval):
        Thay vì tìm từ đồng nghĩa bằng vector, chuyển cấu trúc JSON Mục lục vào trong Context của LLM.
@@ -33,7 +33,7 @@ class HierarchicalRAGIndexing(BaseIndexingStrategy):
         
         # In-memory storage
         self.db_nodes = {}  # dict mapping: node_id -> List[DocumentChunk]
-        self.toc = defaultdict(list) # struct: { "Tên văn bản": [ {id, path, preview}, ... ] }
+        self.toc = defaultdict(list) # struct: { "Tên văn bản": [ {id, dieu, preview}, ... ] }
 
     def index(self, chunks: List[DocumentChunk], **kwargs) -> bool:
         if not chunks:
@@ -45,31 +45,24 @@ class HierarchicalRAGIndexing(BaseIndexingStrategy):
         self.db_nodes = {}
         self.toc = defaultdict(list)
         
-        # Gom nhóm chunks
+        # Gom nhóm chunks theo (source, dieu)
         groups = defaultdict(list)
         for c in chunks:
             src = c.metadata.get("source", "Không phân loại")
-            chuong = c.metadata.get("chuong", "")
-            muc = c.metadata.get("muc", "")
-            dieu = c.metadata.get("dieu", "")
+            dieu = c.metadata.get("dieu", "Không xác định")
             
-            # Gộp chung vào cùng một node nếu cùng địa chỉ
-            key = (src, chuong, muc, dieu)
+            key = (src, dieu)
             groups[key].append(c)
             
         print(f"[PageIndex] Đã gom nhóm thành {len(groups)} Nodes riêng biệt.")
         
         # Gán node_id cho từng cụm và xây table of contents
         node_id_counter = 1
-        for (src, chuong, muc, dieu), group_chunks in groups.items():
+        for (src, dieu), group_chunks in groups.items():
             node_id = node_id_counter
             node_id_counter += 1
             
             self.db_nodes[node_id] = group_chunks
-            
-            # Làm sạch path
-            path_parts = [p for p in [chuong, muc, dieu] if p.strip() and p.lower() not in {"không rõ", "không xác định", "n/a", "none"}]
-            path = " > ".join(path_parts) if path_parts else "Nội dung chung"
             
             # Lấy teaser nội dung để model điều hướng dễ nhận diện
             combined_txt = " ".join([c.text for c in group_chunks])
@@ -77,7 +70,7 @@ class HierarchicalRAGIndexing(BaseIndexingStrategy):
             
             self.toc[src].append({
                 "id": node_id,
-                "path": path,
+                "dieu": dieu,
                 "preview": preview
             })
 
@@ -109,7 +102,7 @@ class HierarchicalRAGIndexing(BaseIndexingStrategy):
         
         prompt = f"""Dưới đây là BẢNG MỤC LỤC của một số tài liệu pháp lý định dạng JSON. Mỗi mục có:
 - 'id': Mã số định danh.
-- 'path': Nhánh cấu trúc (Chương > Mục > Điều).
+- 'dieu': Tên Điều khoản.
 - 'preview': Nội dung tóm tắt để bạn nhận diện.
 
 MỤC LỤC TIÊU ĐIỂM:

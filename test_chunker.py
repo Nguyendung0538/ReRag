@@ -1,13 +1,12 @@
 from src.ingestion.legal_chunker import LegalChunker
-from src.ingestion.document_parser import DocumentParser
+from src.ingestion.docx_loader import load_docx
 
-parser = DocumentParser()
 chunker = LegalChunker()
 
 file2 = r"d:\Code\ReRag\document\test\HỢP ĐỒNG THUÊ NHÀ No10_LK52_08.04.2026.docx"
 
-text2 = parser.parse(file2)
-chunks2 = chunker.chunk(text2, source="Bản Mới")
+text2 = load_docx(file2)
+chunks2 = chunker.chunk(text2, base_metadata={"source": "Bản Mới"})
 print(f"Bản Mới has {len(chunks2)} chunks")
 found = False
 for c in chunks2:

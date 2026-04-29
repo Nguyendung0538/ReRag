@@ -17,7 +17,7 @@ def main():
             print(f"❌ Không tìm thấy file: {path}")
             sys.exit(1)
 
-    db_manager = ChromaManager(persist_dir="./chroma_db", collection_name="legal_compare")
+    db_manager = ChromaManager(collection_name="legal_compare")
     
     # Reset DB trước khi nạp tài liệu mới (theo design: up file mới -> drop DB cũ)
     print("\n🧹 Bắt đầu dọn dẹp Database pháp lý cũ...")

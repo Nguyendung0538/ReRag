@@ -1,69 +1,133 @@
+import re
 from typing import List, Dict, Any, Iterator
 from src.indexing_strategies.base_indexing import BaseIndexingStrategy
 from src.generation.llm_client import LLMClient
+from src.diff.clause_differ import ClauseDiff, ClauseDiffer
 
 class LegalRAGEngine:
     """
     Bộ não RAG: Kết hợp truy xuất Database và lập luận LLM để trả lời câu hỏi So sánh Pháp lý.
+    Hỗ trợ Hybrid Diff + RAG: inject kết quả diff thuần túy vào prompt để LLM không bỏ sót thay đổi.
     """
-    def __init__(self, indexing_strategy: BaseIndexingStrategy, llm_client: LLMClient, old_law_source: str = "", new_law_source: str = ""):
+    def __init__(self, indexing_strategy: BaseIndexingStrategy, llm_client: LLMClient, 
+                 old_law_source: str = "", new_law_source: str = "",
+                 clause_diffs: List[ClauseDiff] = None):
         self.indexing_strategy = indexing_strategy
         self.llm = llm_client
         self.old_law_source = old_law_source
         self.new_law_source = new_law_source
+        self.clause_diffs = clause_diffs or []
+        self.differ = ClauseDiffer()
         
         # System prompt định hướng vai trò chuyên gia SO SÁNH 2 tài liệu hợp đồng
         old_label = self.old_law_source or "Tài liệu 1"
         new_label = self.new_law_source or "Tài liệu 2"
 
         self.system_prompt = (
-            "Bạn là chuyên gia đối chiếu và phân tích hợp đồng, văn bản pháp lý tại Việt Nam.\n"
+            "Bạn là chuyên gia đối chiếu hợp đồng pháp lý.\n"
             f"Hệ thống đang làm việc với HAI tài liệu:\n"
-            f"  • Bản cũ: \"{old_label}\"\n"
-            f"  • Bản mới: \"{new_label}\"\n\n"
-            "CẤU TRÚC VÀ QUY TẮC TRẢ LỜI:\n"
-            "1. Tóm tắt nhanh: Viết một câu tóm tắt điểm khác biệt quan trọng nhất ở đầu câu trả lời.\n\n"
-            "2. Danh sách các điểm khác biệt:\n"
-            "   - Chỉ trình bày dưới dạng gạch đầu dòng (không dùng định dạng bảng).\n"
-            "   - Dưới mỗi chủ đề khác biệt, hãy trích dẫn ngắn gọn văn bản từ Bản cũ và văn bản từ Bản mới để đối chiếu.\n"
-            "   - Ở phần văn bản của Bản mới, hãy TÌM VÀ BÔI ĐẬM (bằng dấu **...**) đúng những từ đã bị sửa đổi hoặc thêm mới so với Bản cũ.\n"
-            "   - VÍ DỤ MẪU CAO CẤP BẠN PHẢI HỌC THEO:\n"
-            "     * **Địa điểm giải quyết tranh chấp**:\n"
-            "       + Bản cũ: Địa điểm tiến hành trọng tài tại thành phố Đà Nẵng.\n"
-            "       + Bản mới: Địa điểm tiến hành trọng tài tại **TP. Hồ Chí Minh**.\n"
-            "   - Tuyệt đối chỉ cung cấp trích dẫn, không viết thêm câu nhận xét, đánh giá hay giải thích ý nghĩa.\n\n"
-            "3. Bỏ qua điểm giống nhau: Bỏ qua và không liệt kê các điều khoản trùng khớp giữa hai văn bản.\n"
-            "4. Kết thúc sớm: Dừng việc sinh câu trả lời ngay sau khi liệt kê xong điểm khác biệt cuối cùng (không viết thêm bất cứ câu Kết luận tổng kết nào nữa)."
+            f"  - Bản cũ: \"{old_label}\"\n"
+            f"  - Bản mới: \"{new_label}\"\n\n"
+
+            "=== LỆNH CẤM TUYỆT ĐỐI ===\n"
+            "- CẤM dùng emoji.\n"
+            "- CẤM dùng bảng (table/markdown table).\n"
+            "- CẤM viết Kết luận, Tổng kết, Nhận xét, Lời khuyên, Đánh giá.\n"
+            "- CẤM tóm tắt hay diễn giải nội dung. Chỉ được SAO CHÉP NGUYÊN VĂN.\n"
+            "- CẤM viết bất kỳ câu nào không phải là trích dẫn nguyên văn từ tài liệu.\n"
+            "- DỪNG NGAY sau điểm khác biệt cuối cùng. Không viết thêm gì.\n\n"
+
+            "=== CÁCH TRẢ LỜI ===\n"
+            "Dòng 1: Một câu tóm tắt ngắn gọn về điểm khác biệt chính.\n\n"
+            "Sau đó liệt kê từng điểm khác biệt:\n"
+            "- Ghi rõ Điều bao nhiêu (VD: Điều 7, Điều 12.4).\n"
+            "- Dòng 'Bản cũ:' PHẢI là văn bản SAO CHÉP NGUYÊN VĂN từ phần BẢN GỐC trong ngữ cảnh. KHÔNG được tự viết lại.\n"
+            "- Dòng 'Bản mới:' PHẢI là văn bản SAO CHÉP NGUYÊN VĂN từ phần BẢN MỚI trong ngữ cảnh. KHÔNG được tự viết lại.\n"
+            "- Trong dòng Bản mới, bôi đậm (dùng **...**) CHỈ những từ/cụm từ bị thay đổi so với Bản cũ.\n"
+            "- Bỏ qua các điều khoản giống nhau.\n\n"
+
+            "=== VÍ DỤ CHUẨN (HỌC THEO CHÍNH XÁC ĐỊNH DẠNG NÀY) ===\n\n"
+            "Thay đổi quan trọng nhất: Điều 7 cụ thể hóa thời hạn thông báo từ 'kịp thời' thành 03 ngày làm việc.\n\n"
+            "- Điều 7 - Thời hạn thông báo:\n"
+            "  + Bản cũ: Nếu một Bên vi phạm quy định về bảo mật thông tin và không khắc phục trong thời hạn kịp thời thông báo của Bên bị vi phạm, hoặc vi phạm lần 2 thì Bên bị vi phạm có quyền chấm dứt Hợp đồng này.\n"
+            "  + Bản mới: Nếu một Bên vi phạm quy định về bảo mật thông tin và không khắc phục trong thời hạn **thông báo trong vòng 03 ngày làm việc** của Bên bị vi phạm, hoặc vi phạm lần 2 thì Bên bị vi phạm có quyền chấm dứt Hợp đồng này.\n\n"
+            "- Điều 15 - Số lượng bản hợp đồng:\n"
+            "  + Bản cũ: Hợp đồng này được lập thành 04 (bốn) bản bằng tiếng Việt có giá trị pháp lý như nhau; mỗi Bên giữ 02 (hai) bản.\n"
+            "  + Bản mới: Hợp đồng này được lập thành **06 (sáu)** bản bằng tiếng Việt có giá trị pháp lý như nhau; mỗi Bên giữ 02 (hai) bản.\n\n"
+
+            "=== VỀ DIFF TỰ ĐỘNG ===\n"
+            "Nếu trong ngữ cảnh có phần 'KẾT QUẢ SO SÁNH TỰ ĐỘNG (DIFF)', bạn PHẢI dùng nó làm cơ sở.\n"
+            "Phần DIFF đã có sẵn dấu **in đậm** bao quanh các từ thay đổi trong Bản mới.\n"
+            "Hãy SAO CHÉP NGUYÊN VĂN cả phần Bản cũ và Bản mới (giữ nguyên dấu **...**) từ DIFF vào câu trả lời.\n"
+            "KHÔNG ĐƯỢC tự thêm hoặc bỏ bất kỳ dấu **in đậm** nào.\n"
+            "KHÔNG ĐƯỢC bỏ qua bất kỳ mục nào trong DIFF."
         )
+
+    def _extract_dieu_from_query(self, query: str) -> str | None:
+        """Trích xuất tên Điều từ câu hỏi (VD: 'điều 6' → 'Điều 6')."""
+        from src.ingestion.legal_chunker import LegalChunker
+        match = re.search(r"điều\s+([\dIVXLCDM]+)", query, re.IGNORECASE)
+        if match:
+            chunker = LegalChunker()
+            normalized = chunker._normalize_dieu_number(match.group(1))
+            return f"Điều {normalized}"
+        return None
+
+    def _get_relevant_diffs(self, query: str) -> List[ClauseDiff]:
+        """
+        Lọc diff liên quan đến câu hỏi.
+        - Nếu query nhắc Điều cụ thể → chỉ lấy diff cho Điều đó
+        - Nếu query tổng quát → lấy tất cả diff
+        """
+        if not self.clause_diffs:
+            return []
+        
+        dieu_name = self._extract_dieu_from_query(query)
+        if dieu_name:
+            filtered = self.differ.filter_by_dieu(self.clause_diffs, dieu_name)
+            if filtered:
+                return filtered
+        
+        # Query tổng quát hoặc không tìm thấy Điều cụ thể → trả hết
+        return self.clause_diffs
 
     def _build_context_prompt(self, query: str, search_results: Dict[str, Any]) -> str:
         """
-        Lắp ráp kịch bản so sánh gộp chung kết quả từ Database.
+        Lắp ráp prompt so sánh. Chiến lược:
+        - Query tổng quát (không nhắc Điều cụ thể) → dùng DIFF làm nguồn DUY NHẤT
+        - Query cụ thể (nhắc Điều X) → dùng DIFF + retrieval context bổ trợ
         """
+        # Kiểm tra diff
+        relevant_diffs = self._get_relevant_diffs(query)
+        is_specific_query = self._extract_dieu_from_query(query) is not None
+        
+        # Nếu có diff và query tổng quát → chỉ dùng diff, bỏ retrieval context
+        if relevant_diffs and not is_specific_query:
+            diff_text = self.differ.format_diff_for_prompt(relevant_diffs)
+            final_prompt = (
+                "=== KẾT QUẢ SO SÁNH TỰ ĐỘNG (DIFF) ===\n"
+                "Dưới đây là TOÀN BỘ các điểm khác biệt giữa hai tài liệu, được tính toán chính xác 100% bằng thuật toán.\n"
+                "Phần Bản mới đã có sẵn dấu **in đậm** bao quanh các từ thay đổi.\n\n"
+                f"{diff_text}\n\n"
+                f'Câu hỏi: "{query}"\n\n'
+                "NHIỆM VỤ: Hãy trình bày lại TỪNG mục thay đổi ở trên theo đúng định dạng chuẩn.\n"
+                "Với mỗi mục, SAO CHÉP NGUYÊN VĂN phần Bản cũ và Bản mới (giữ nguyên dấu **in đậm**).\n"
+                "KHÔNG được bỏ sót mục nào. KHÔNG được tự viết thêm nội dung ngoài trích dẫn."
+            )
+            return final_prompt
+        
+        # Query cụ thể hoặc không có diff → build retrieval context
         old_law_blocks = []
         new_law_blocks = []
         other_blocks = []
         
-        # ChromaDB trả về list of list cho n_results
         documents = search_results.get("documents", [[]])[0]
         metadatas = search_results.get("metadatas", [[]])[0]
         
         for i, (doc, meta) in enumerate(zip(documents, metadatas)):
             source = meta.get("source", "")
-            chuong = meta.get("chuong", "")
-            muc    = meta.get("muc", "")
             dieu   = meta.get("dieu", "")
-            
-            # Lọc bỏ các giá trị không xác định trước khi ghép chuỗi vị trí
-            _UNKNOWN_TOKENS = {"không rõ", "không xác định", "n/a", "none", ""}
-            
-            def _is_known(val: str) -> bool:
-                return val.strip().lower() not in _UNKNOWN_TOKENS
-            
-            location_parts = [p for p in [chuong, muc, dieu] if _is_known(p)]
-            location_str = " > ".join(location_parts) if location_parts else "Không rõ vị trí"
-            
-            # Format 1 block thông tin
+            location_str = dieu if dieu else "Không rõ vị trí"
             block = f"Vị trí: {location_str}\nNội dung văn bản:\n{doc}\n" + "-" * 30
             
             if self.old_law_source and source == self.old_law_source:
@@ -81,12 +145,22 @@ class LegalRAGEngine:
         if other_blocks:
             context_str += "=== TÀI LIỆU KHÁC ===\n" + "\n\n".join(other_blocks) + "\n\n"
         
+        # Inject diff cho query cụ thể
+        diff_section = ""
+        if relevant_diffs:
+            diff_text = self.differ.format_diff_for_prompt(relevant_diffs)
+            diff_section = (
+                "=== KẾT QUẢ SO SÁNH TỰ ĐỘNG (DIFF) ===\n"
+                "Phần Bản mới đã có sẵn dấu **in đậm** bao quanh các từ thay đổi.\n\n"
+                f"{diff_text}\n\n"
+            )
+        
         final_prompt = (
-            "Dưới đây là CÁC TRÍCH ĐOẠN PHÁP LÝ được rút trích có liên quan tới câu hỏi của người dùng:\n\n"
+            f"{diff_section}"
             f"{context_str}\n\n"
-            "Câu hỏi hoặc Yêu cầu So sánh của người dùng:\n"
-            f'"{query}"\n\n'
-            "Dựa trên các trích đoạn trên, hãy phân tích và trả lời câu hỏi chi tiết theo đúng Quy tắc Chuyên gia."
+            f'Câu hỏi: "{query}"\n\n'
+            "NHIỆM VỤ: SAO CHÉP NGUYÊN VĂN phần Bản cũ và Bản mới từ DIFF (giữ nguyên dấu **in đậm**) vào câu trả lời.\n"
+            "Nếu không có DIFF, trích dẫn nguyên văn từ BẢN GỐC và BẢN MỚI, tự bôi đậm phần thay đổi."
         )
         return final_prompt
 
