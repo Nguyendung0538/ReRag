@@ -20,6 +20,7 @@ class NormalV1Strategy(QueryStrategy):
 
         # Truy xuất cơ sở dữ liệu với nguyên câu hỏi gốc
         results = engine.indexing_strategy.build_context(query, top_k=top_k, **kwargs)
+        engine.last_retrieved_context = results  # Citation tracking
         
         docs = results.get("documents", [[]])[0]
         

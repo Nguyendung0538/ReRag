@@ -37,21 +37,6 @@ if "embedding_model" not in st.session_state:
 # ==================== SETTINGS MODAL ====================
 @st.dialog("Cài đặt Hệ thống RAG")
 def show_settings():
-    # ── Indexing Strategy ───────────────────────────────────────────────────
-    st.subheader("Indexing Strategy")
-    st.caption("Cách xử lý và lưu trữ dữ liệu (ChromaDB Vector hay RAM).")
-    chosen_idx_strat = st.selectbox(
-        label="Indexing Strategy:",
-        options=list(INDEXING_STRATEGIES.keys()),
-        index=list(INDEXING_STRATEGIES.keys()).index(st.session_state["indexing_strategy"])
-    )
-    
-    is_vectorless = "Vectorless" in chosen_idx_strat
-
-    st.divider()
-    
-
-
     # ── Query Strategy ───────────────────────────────────────────────────────
     st.subheader("Kiến trúc Truy vấn")
     st.caption("Chọn phương pháp RAG để gửi câu hỏi vào cơ sở dữ liệu vector.")
@@ -67,15 +52,7 @@ def show_settings():
     col_save, col_cancel = st.columns(2)
     with col_save:
         if st.button("Lưu cài đặt", type="primary", use_container_width=True):
-            old_idx_strat = st.session_state.get("indexing_strategy", "")
-            
             st.session_state["strategy_choice"] = chosen_strategy
-            st.session_state["indexing_strategy"] = chosen_idx_strat
-            
-            # Reset DB nếu đổi thông số quan trọng
-            if chosen_idx_strat != old_idx_strat:
-                st.session_state["db_ready"] = False
-                st.info("Cài đặt cốt lõi thay đổi — cần Khởi tạo lại RAG.")
             st.rerun()
     with col_cancel:
         if st.button("Huỷ", use_container_width=True):
@@ -117,24 +94,11 @@ with st.sidebar:
                     st.session_state["clause_diffs"] = clause_diffs
                     
                     if all_chunks:
-                        # Init strategy
+                        # Init strategy (chỉ còn TradiRAG)
                         idx_strat_name = st.session_state["indexing_strategy"]
                         strat_class = INDEXING_STRATEGIES[idx_strat_name]
-                        if "Tradi" in idx_strat_name:
-                            indexer = strat_class(embedding_model=st.session_state["embedding_model"])
-                        elif "Hybrid" in idx_strat_name:
-                            indexer = strat_class(
-                                embedding_model=st.session_state["embedding_model"],
-                                llm_model=st.session_state["llm_model"]
-                            )
-                        elif "Vectorless" in idx_strat_name:
-                            indexer = strat_class(llm_model=st.session_state["llm_model"])
-                        else:
-                            # Fallback khởi tạo
-                            indexer = strat_class()
-                            
-                        # Keep it globally so we can retrieve exactly what was just parsed 
-                        # This is especially true for NoEmbed which holds data in RAM.
+                        indexer = strat_class(embedding_model=st.session_state["embedding_model"])
+                        
                         st.session_state["active_indexer"] = indexer
                         
                         success = indexer.index(all_chunks)
@@ -211,9 +175,30 @@ if prompt := st.chat_input("Hỏi gì đó (Ví dụ: So sánh hạn sử dụng
                     full_text += chunk_text
                 
                 st.markdown(full_text)
+                
+                # Tính Grounding Score
+                score = rag_engine.compute_grounding_score(full_text)
                 end_time = time.time()
-                st.caption(f"Thời gian phản hồi: {end_time - start_time:.2f} giây")
-                full_response = full_text + f"\n\nThời gian phản hồi: {end_time - start_time:.2f} giây"
+                elapsed = end_time - start_time
+                
+                st.caption(f"Thời gian phản hồi: {elapsed:.2f}s | Grounding: {score:.0f}%")
+                
+                # Hiển thị nguồn trích dẫn
+                ctx = rag_engine.last_retrieved_context
+                src_docs = ctx.get("documents", [[]])[0]
+                src_metas = ctx.get("metadatas", [[]])[0]
+                
+                if src_docs:
+                    with st.expander(f"Nguồn trích dẫn ({len(src_docs)} đoạn)", expanded=False):
+                        for i, (doc, meta) in enumerate(zip(src_docs, src_metas)):
+                            source = meta.get("source", "?")
+                            dieu = meta.get("dieu", "?")
+                            st.markdown(f"**[{i+1}] {dieu}** - `{source}`")
+                            st.text(doc[:300] + ("..." if len(doc) > 300 else ""))
+                            if i < len(src_docs) - 1:
+                                st.divider()
+                
+                full_response = full_text + f"\n\nThời gian: {elapsed:.2f}s | Grounding: {score:.0f}%"
                 
         # Lưu câu trả lời của Trợ lý vào session
         st.session_state["messages"].append({"role": "assistant", "content": full_response})

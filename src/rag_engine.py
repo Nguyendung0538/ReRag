@@ -1,4 +1,5 @@
 import re
+import difflib
 from typing import List, Dict, Any, Iterator
 from src.indexing_strategies.base_indexing import BaseIndexingStrategy
 from src.generation.llm_client import LLMClient
@@ -18,6 +19,7 @@ class LegalRAGEngine:
         self.new_law_source = new_law_source
         self.clause_diffs = clause_diffs or []
         self.differ = ClauseDiffer()
+        self.last_retrieved_context = {"documents": [[]], "metadatas": [[]]}
         
         # System prompt định hướng vai trò chuyên gia SO SÁNH 2 tài liệu hợp đồng
         old_label = self.old_law_source or "Tài liệu 1"
@@ -103,6 +105,9 @@ class LegalRAGEngine:
         
         # Nếu có diff và query tổng quát → chỉ dùng diff, bỏ retrieval context
         if relevant_diffs and not is_specific_query:
+            # Clear retrieval context — không dùng nên không hiển thị trong citation
+            self.last_retrieved_context = {"documents": [[]], "metadatas": [[]]}
+            
             diff_text = self.differ.format_diff_for_prompt(relevant_diffs)
             final_prompt = (
                 "=== KẾT QUẢ SO SÁNH TỰ ĐỘNG (DIFF) ===\n"
@@ -187,3 +192,45 @@ class LegalRAGEngine:
         # Chuyển nhượng phân luồng thực thi cho class Strategy
         for chunk in strategy_instance.stream_execute(query=query, engine=self, top_k=top_k):
             yield chunk
+
+    def compute_grounding_score(self, answer: str) -> float:
+        """
+        Tính % nội dung câu trả lời có thể truy nguyên về nguồn gốc.
+        
+        Sử dụng word-level overlap: đếm % từ trong câu trả lời xuất hiện
+        trong tài liệu nguồn (chunks + diff). Tránh lỗi SequenceMatcher
+        khi so sánh câu ngắn với chunk dài.
+        """
+        sentences = [s.strip() for s in re.split(r'[.!?\n]', answer) if len(s.strip()) > 15]
+        if not sentences:
+            return 0.0
+        
+        # Thu thập TẤT CẢ nguồn: retrieved chunks + diff text
+        source_docs = list(self.last_retrieved_context.get("documents", [[]])[0])
+        
+        # Thêm diff text làm nguồn (quan trọng cho broad queries không qua retrieval)
+        if self.clause_diffs:
+            for d in self.clause_diffs:
+                if d.old_text:
+                    source_docs.append(d.old_text)
+                if d.new_text:
+                    source_docs.append(d.new_text)
+        
+        if not source_docs:
+            return 0.0
+        
+        # Build tập từ từ tất cả nguồn
+        source_words = set()
+        for doc in source_docs:
+            source_words.update(doc.lower().split())
+        
+        grounded = 0
+        for sent in sentences:
+            sent_words = sent.lower().split()
+            if not sent_words:
+                continue
+            overlap = sum(1 for w in sent_words if w in source_words) / len(sent_words)
+            if overlap >= 0.5:  # >=50% từ trong câu tìm thấy trong nguồn
+                grounded += 1
+        
+        return (grounded / len(sentences)) * 100
