@@ -6,7 +6,7 @@
         {
             "id": "c1",
             "type": "location_change",
-            "location": "Bên B - Địa chỉ",
+            "location": "Lời nói đầu / Căn cứ",
             "v1_text": "quận Hai Bà Trưng",
             "v2_text": "quận Cầu Giấy",
             "description": "Thay đổi địa chỉ của Bên B"

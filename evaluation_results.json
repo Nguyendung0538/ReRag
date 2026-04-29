@@ -1,0 +1,239 @@
+[
+  {
+    "name": "Hop_tac_dau_tu",
+    "diff": {
+      "precision": 100.0,
+      "recall": 100.0,
+      "f1": 100.0,
+      "found_dieu": [
+        "Điều 18",
+        "Điều 19"
+      ],
+      "expected_dieu": [
+        "Điều 18",
+        "Điều 19"
+      ],
+      "true_positives": [
+        "Điều 18",
+        "Điều 19"
+      ],
+      "num_diffs": 2
+    },
+    "rag": {
+      "change_recall": 100.0,
+      "changes_detected": 2,
+      "total_changes": 2,
+      "grounding_score": 88.88888888888889,
+      "latency": 25.100682020187378,
+      "details": [
+        {
+          "id": "c1",
+          "location": "Điều 18",
+          "v1_text": "bằng văn bản",
+          "v2_text": "bằng văn bản và phải được công chứng",
+          "v1_found": true,
+          "v2_found": true,
+          "both_found": true
+        },
+        {
+          "id": "c2",
+          "location": "Điều 19",
+          "v1_text": "02 bản",
+          "v2_text": "04 bản",
+          "v1_found": true,
+          "v2_found": true,
+          "both_found": true
+        }
+      ]
+    }
+  },
+  {
+    "name": "dai_ly",
+    "diff": {
+      "precision": 100.0,
+      "recall": 100.0,
+      "f1": 100.0,
+      "found_dieu": [
+        "Điều 12"
+      ],
+      "expected_dieu": [
+        "Điều 12"
+      ],
+      "true_positives": [
+        "Điều 12"
+      ],
+      "num_diffs": 1
+    },
+    "rag": {
+      "change_recall": 100.0,
+      "changes_detected": 2,
+      "total_changes": 2,
+      "grounding_score": 100.0,
+      "latency": 59.13178300857544,
+      "details": [
+        {
+          "id": "c1",
+          "location": "Điều 12",
+          "v1_text": "Trung tâm Trọng tài Thương mại Miền Trung (MCAC)",
+          "v2_text": "Trung tâm Trọng tài Quốc tế Việt Nam (VIAC)",
+          "v1_found": true,
+          "v2_found": true,
+          "both_found": true
+        },
+        {
+          "id": "c2",
+          "location": "Điều 12",
+          "v1_text": "thành phố Đà Nẵng",
+          "v2_text": "TP. Hồ Chí Minh",
+          "v1_found": true,
+          "v2_found": true,
+          "both_found": true
+        }
+      ]
+    }
+  },
+  {
+    "name": "li_xang",
+    "diff": {
+      "precision": 100.0,
+      "recall": 100.0,
+      "f1": 100.0,
+      "found_dieu": [
+        "Điều 12",
+        "Điều 13"
+      ],
+      "expected_dieu": [
+        "Điều 12",
+        "Điều 13"
+      ],
+      "true_positives": [
+        "Điều 12",
+        "Điều 13"
+      ],
+      "num_diffs": 2
+    },
+    "rag": {
+      "change_recall": 100.0,
+      "changes_detected": 2,
+      "total_changes": 2,
+      "grounding_score": 85.71428571428571,
+      "latency": 28.409032106399536,
+      "details": [
+        {
+          "id": "c1",
+          "location": "Điều 12",
+          "v1_text": "30 ngày",
+          "v2_text": "15 ngày",
+          "v1_found": true,
+          "v2_found": true,
+          "both_found": true
+        },
+        {
+          "id": "c2",
+          "location": "Điều 13",
+          "v1_text": "04 (bốn)",
+          "v2_text": "06 (sáu)",
+          "v1_found": true,
+          "v2_found": true,
+          "both_found": true
+        }
+      ]
+    }
+  },
+  {
+    "name": "mua_ban_hang_hoa",
+    "diff": {
+      "precision": 100.0,
+      "recall": 100.0,
+      "f1": 100.0,
+      "found_dieu": [
+        "Điều 13",
+        "Điều 14"
+      ],
+      "expected_dieu": [
+        "Điều 13",
+        "Điều 14"
+      ],
+      "true_positives": [
+        "Điều 13",
+        "Điều 14"
+      ],
+      "num_diffs": 2
+    },
+    "rag": {
+      "change_recall": 100.0,
+      "changes_detected": 2,
+      "total_changes": 2,
+      "grounding_score": 100.0,
+      "latency": 68.34323334693909,
+      "details": [
+        {
+          "id": "c1",
+          "location": "Điều 13",
+          "v1_text": "30 ngày",
+          "v2_text": "20 ngày",
+          "v1_found": true,
+          "v2_found": true,
+          "both_found": true
+        },
+        {
+          "id": "c2",
+          "location": "Điều 14",
+          "v1_text": "Trung tâm Trọng tài Thương mại Miền Trung (MCAC)",
+          "v2_text": "Tòa án nhân dân có thẩm quyền",
+          "v1_found": true,
+          "v2_found": true,
+          "both_found": true
+        }
+      ]
+    }
+  },
+  {
+    "name": "tham_dinh_gia",
+    "diff": {
+      "precision": 100.0,
+      "recall": 100.0,
+      "f1": 100.0,
+      "found_dieu": [
+        "Lời nói đầu / Căn cứ",
+        "Điều 7"
+      ],
+      "expected_dieu": [
+        "Lời nói đầu / Căn cứ",
+        "Điều 7"
+      ],
+      "true_positives": [
+        "Lời nói đầu / Căn cứ",
+        "Điều 7"
+      ],
+      "num_diffs": 2
+    },
+    "rag": {
+      "change_recall": 100.0,
+      "changes_detected": 2,
+      "total_changes": 2,
+      "grounding_score": 92.3076923076923,
+      "latency": 51.25892448425293,
+      "details": [
+        {
+          "id": "c1",
+          "location": "Lời nói đầu / Căn cứ",
+          "v1_text": "quận Hai Bà Trưng",
+          "v2_text": "quận Cầu Giấy",
+          "v1_found": true,
+          "v2_found": true,
+          "both_found": true
+        },
+        {
+          "id": "c2",
+          "location": "Điều 7",
+          "v1_text": "kịp thời thông báo",
+          "v2_text": "thông báo trong vòng 03 ngày làm việc",
+          "v1_found": true,
+          "v2_found": true,
+          "both_found": true
+        }
+      ]
+    }
+  }
+]

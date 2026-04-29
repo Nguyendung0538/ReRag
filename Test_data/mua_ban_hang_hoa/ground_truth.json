@@ -6,7 +6,7 @@
         {
             "id": "c1",
             "type": "value_change",
-            "location": "Điều 13.3",
+            "location": "Điều 13",
             "v1_text": "30 ngày",
             "v2_text": "20 ngày",
             "description": "Rút ngắn thời hạn từ 30 xuống 20 ngày"
