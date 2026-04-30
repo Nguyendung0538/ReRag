@@ -73,7 +73,7 @@ with st.sidebar:
             st.session_state["new_law_name"] = file_new.name
             
             init_start = time.time()
-            with st.spinner("Đang cấu trúc và nạp văn bản (theo Indexing Strategy)... Xin đợi..."):
+            with st.spinner("Đang cấu trúc và nạp văn bản"):
                 try:
                     # Parse document chunks — tách riêng từng tài liệu để chạy diff
                     ext_old = os.path.splitext(file_old.name)[1].lower()
