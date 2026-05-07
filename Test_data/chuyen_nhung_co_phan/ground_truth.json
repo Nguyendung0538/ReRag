@@ -1,0 +1,31 @@
+{
+    "pair_id": "pair_02",
+    "v1_file": "v1_chuyen_nhung_co_phan.docx",
+    "v2_file": "v2_chuyen_nhung_co_phan.docx",
+    "changes": [
+        {
+            "id": "c1",
+            "type": "modification",
+            "location": "Điều 7",
+            "v1_text": "bằng văn bản và có chữ ký của các bên.",
+            "v2_text": "bằng văn bản, có chữ ký của các bên và phải được công chứng.",
+            "description": "Bổ sung yêu cầu công chứng đối với các sửa đổi, bổ sung của Hợp đồng."
+        },
+        {
+            "id": "c2",
+            "type": "modification",
+            "location": "Điều 11",
+            "v1_text": "Trung tâm Trọng tài Thương mại Miền Trung (MCAC)",
+            "v2_text": "Trung tâm Trọng tài Quốc tế Việt Nam (VIAC)",
+            "description": "Thay đổi cơ quan giải quyết tranh chấp từ MCAC sang VIAC."
+        },
+        {
+            "id": "c3",
+            "type": "value_change",
+            "location": "Điều 12",
+            "v1_text": "03 (ba) bản",
+            "v2_text": "04 (bốn) bản",
+            "description": "Tăng số lượng bản hợp đồng được lập từ 3 lên 4 bản."
+        }
+    ]
+}

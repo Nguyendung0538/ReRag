@@ -23,8 +23,8 @@
       "change_recall": 100.0,
       "changes_detected": 2,
       "total_changes": 2,
-      "grounding_score": 88.88888888888889,
-      "latency": 25.100682020187378,
+      "grounding_score": 77.77777777777779,
+      "latency": 36.725879430770874,
       "details": [
         {
           "id": "c1",
@@ -40,6 +40,66 @@
           "location": "Điều 19",
           "v1_text": "02 bản",
           "v2_text": "04 bản",
+          "v1_found": true,
+          "v2_found": true,
+          "both_found": true
+        }
+      ]
+    }
+  },
+  {
+    "name": "chuyen_nhung_co_phan",
+    "diff": {
+      "precision": 100.0,
+      "recall": 100.0,
+      "f1": 100.0,
+      "found_dieu": [
+        "Điều 11",
+        "Điều 12",
+        "Điều 7"
+      ],
+      "expected_dieu": [
+        "Điều 11",
+        "Điều 12",
+        "Điều 7"
+      ],
+      "true_positives": [
+        "Điều 11",
+        "Điều 12",
+        "Điều 7"
+      ],
+      "num_diffs": 3
+    },
+    "rag": {
+      "change_recall": 66.66666666666666,
+      "changes_detected": 2,
+      "total_changes": 3,
+      "grounding_score": 100.0,
+      "latency": 66.84741950035095,
+      "details": [
+        {
+          "id": "c1",
+          "location": "Điều 7",
+          "v1_text": "bằng văn bản và có chữ ký của các bên.",
+          "v2_text": "bằng văn bản, có chữ ký của các bên và phải được công chứng.",
+          "v1_found": true,
+          "v2_found": false,
+          "both_found": false
+        },
+        {
+          "id": "c2",
+          "location": "Điều 11",
+          "v1_text": "Trung tâm Trọng tài Thương mại Miền Trung (MCAC)",
+          "v2_text": "Trung tâm Trọng tài Quốc tế Việt Nam (VIAC)",
+          "v1_found": true,
+          "v2_found": true,
+          "both_found": true
+        },
+        {
+          "id": "c3",
+          "location": "Điều 12",
+          "v1_text": "03 (ba) bản",
+          "v2_text": "04 (bốn) bản",
           "v1_found": true,
           "v2_found": true,
           "both_found": true
@@ -69,7 +129,7 @@
       "changes_detected": 2,
       "total_changes": 2,
       "grounding_score": 100.0,
-      "latency": 59.13178300857544,
+      "latency": 33.14622712135315,
       "details": [
         {
           "id": "c1",
@@ -85,6 +145,102 @@
           "location": "Điều 12",
           "v1_text": "thành phố Đà Nẵng",
           "v2_text": "TP. Hồ Chí Minh",
+          "v1_found": true,
+          "v2_found": true,
+          "both_found": true
+        }
+      ]
+    }
+  },
+  {
+    "name": "dich_vu_sua_chua",
+    "diff": {
+      "precision": 100.0,
+      "recall": 100.0,
+      "f1": 100.0,
+      "found_dieu": [
+        "Điều 3",
+        "Điều 9"
+      ],
+      "expected_dieu": [
+        "Điều 3",
+        "Điều 9"
+      ],
+      "true_positives": [
+        "Điều 3",
+        "Điều 9"
+      ],
+      "num_diffs": 2
+    },
+    "rag": {
+      "change_recall": 100.0,
+      "changes_detected": 2,
+      "total_changes": 2,
+      "grounding_score": 100.0,
+      "latency": 40.7501015663147,
+      "details": [
+        {
+          "id": "c1",
+          "location": "Điều 3",
+          "v1_text": "Bên A tạm ứng cho Bên B số tiền là ………. đồng (………..đồng chẵn) tương ứng 30 % giá trị Hợp đồng ngay sau khi ký bản hợp đồng này.",
+          "v2_text": "Bên A tạm ứng cho Bên B số tiền là ………. đồng (………..đồng chẵn) tương ứng 50 % giá trị Hợp đồng ngay sau khi ký bản hợp đồng này.",
+          "v1_found": true,
+          "v2_found": true,
+          "both_found": true
+        },
+        {
+          "id": "c2",
+          "location": "Điều 9",
+          "v1_text": "Nếu Bên A vi phạm điều khoản thanh toán thì Bên A sẽ chịu phạt 1% (một phần trăm) của tổng số tiền phải thanh toán cho Bên B trên một ngày chậm thanh toán.",
+          "v2_text": "Nếu Bên A vi phạm điều khoản thanh toán thì Bên A sẽ chịu phạt 2% (hai phần trăm) của tổng số tiền phải thanh toán cho Bên B trên một ngày chậm thanh toán.",
+          "v1_found": true,
+          "v2_found": true,
+          "both_found": true
+        }
+      ]
+    }
+  },
+  {
+    "name": "hop_tac_kinh_doanh",
+    "diff": {
+      "precision": 100.0,
+      "recall": 100.0,
+      "f1": 100.0,
+      "found_dieu": [
+        "Điều 2",
+        "Điều 6"
+      ],
+      "expected_dieu": [
+        "Điều 2",
+        "Điều 6"
+      ],
+      "true_positives": [
+        "Điều 2",
+        "Điều 6"
+      ],
+      "num_diffs": 2
+    },
+    "rag": {
+      "change_recall": 100.0,
+      "changes_detected": 2,
+      "total_changes": 2,
+      "grounding_score": 88.88888888888889,
+      "latency": 43.81050944328308,
+      "details": [
+        {
+          "id": "c1",
+          "location": "Điều 6",
+          "v1_text": "QUYỀN VÀ NGHĨA VỤ CỦA BÊN A",
+          "v2_text": "QUYỀN VÀ TRÁCH NHIỆM BỒI THƯỜNG CỦA BÊN A",
+          "v1_found": true,
+          "v2_found": true,
+          "both_found": true
+        },
+        {
+          "id": "c2",
+          "location": "Điều 2",
+          "v1_text": "Đối với Bên A: Bên A góp toàn bộ các tài sản tại Địa điểm hợp tác và sử dụng tư cách của Hộ kinh doanh ………….do Bên A sở hữu và các đầy đủ các Giấy phép kinh doanh để kinh doanh nhà hàng quán bar để kinh doanh Đơn vị hợp tác.",
+          "v2_text": "Đối với Bên A: Bên A góp toàn bộ các tài sản tại Địa điểm hợp tác.",
           "v1_found": true,
           "v2_found": true,
           "both_found": true
@@ -117,7 +273,7 @@
       "changes_detected": 2,
       "total_changes": 2,
       "grounding_score": 85.71428571428571,
-      "latency": 28.409032106399536,
+      "latency": 47.825682640075684,
       "details": [
         {
           "id": "c1",
@@ -133,6 +289,54 @@
           "location": "Điều 13",
           "v1_text": "04 (bốn)",
           "v2_text": "06 (sáu)",
+          "v1_found": true,
+          "v2_found": true,
+          "both_found": true
+        }
+      ]
+    }
+  },
+  {
+    "name": "moi_gioi_mua_ban_bat_dong_san",
+    "diff": {
+      "precision": 100.0,
+      "recall": 100.0,
+      "f1": 100.0,
+      "found_dieu": [
+        "Điều 1",
+        "Điều 5"
+      ],
+      "expected_dieu": [
+        "Điều 1",
+        "Điều 5"
+      ],
+      "true_positives": [
+        "Điều 1",
+        "Điều 5"
+      ],
+      "num_diffs": 2
+    },
+    "rag": {
+      "change_recall": 100.0,
+      "changes_detected": 2,
+      "total_changes": 2,
+      "grounding_score": 100.0,
+      "latency": 38.832072734832764,
+      "details": [
+        {
+          "id": "c1",
+          "location": "Điều 5",
+          "v1_text": "- Thanh toán phí môi giới cho bên A theo Điều 2 của hợp đồng;",
+          "v2_text": "- Thanh toán phí môi giới cho bên A theo Điều 2 của hợp đồng trong thời hạn 05 ngày;",
+          "v1_found": true,
+          "v2_found": true,
+          "both_found": true
+        },
+        {
+          "id": "c2",
+          "location": "Điều 1",
+          "v1_text": "Bên B đồng ý giao cho Bên A thực hiện dịch vụ môi giới bán/mua bất động sản do Bên B là chủ sở hữu.",
+          "v2_text": "Bên B đồng ý giao độc quyền cho Bên A thực hiện dịch vụ môi giới bán/mua bất động sản do Bên B là chủ sở hữu.",
           "v1_found": true,
           "v2_found": true,
           "both_found": true
@@ -165,7 +369,7 @@
       "changes_detected": 2,
       "total_changes": 2,
       "grounding_score": 100.0,
-      "latency": 68.34323334693909,
+      "latency": 28.202060222625732,
       "details": [
         {
           "id": "c1",
@@ -181,6 +385,54 @@
           "location": "Điều 14",
           "v1_text": "Trung tâm Trọng tài Thương mại Miền Trung (MCAC)",
           "v2_text": "Tòa án nhân dân có thẩm quyền",
+          "v1_found": true,
+          "v2_found": true,
+          "both_found": true
+        }
+      ]
+    }
+  },
+  {
+    "name": "nguyen_tac",
+    "diff": {
+      "precision": 100.0,
+      "recall": 100.0,
+      "f1": 100.0,
+      "found_dieu": [
+        "Điều 2",
+        "Điều 9"
+      ],
+      "expected_dieu": [
+        "Điều 2",
+        "Điều 9"
+      ],
+      "true_positives": [
+        "Điều 2",
+        "Điều 9"
+      ],
+      "num_diffs": 2
+    },
+    "rag": {
+      "change_recall": 100.0,
+      "changes_detected": 2,
+      "total_changes": 2,
+      "grounding_score": 100.0,
+      "latency": 40.256110191345215,
+      "details": [
+        {
+          "id": "c1",
+          "location": "Điều 2",
+          "v1_text": "Trong phạm vi hợp đồng này và các tài liệu khác liên quan và gắn liền với Hợp đồng này, các từ ngữ dưới đây được hiểu như sau:",
+          "v2_text": "Trong phạm vi hợp đồng này, các từ ngữ dưới đây được hiểu như sau:",
+          "v1_found": true,
+          "v2_found": true,
+          "both_found": true
+        },
+        {
+          "id": "c2",
+          "location": "Điều 9",
+          "v1_text": "Các Bên cam kết không vi phạm quyền sở hữu trí tuệ của nhau trong quá trình thực hiện dự án theo quy định của pháp luật.",
+          "v2_text": "Các Bên cam kết không vi phạm quyền sở hữu trí tuệ của nhau trong quá trình thực hiện dự án theo quy định của pháp luật sở hữu trí tuệ Việt Nam hiện hành.",
           "v1_found": true,
           "v2_found": true,
           "both_found": true
@@ -212,8 +464,8 @@
       "change_recall": 100.0,
       "changes_detected": 2,
       "total_changes": 2,
-      "grounding_score": 92.3076923076923,
-      "latency": 51.25892448425293,
+      "grounding_score": 75.0,
+      "latency": 44.37547492980957,
       "details": [
         {
           "id": "c1",

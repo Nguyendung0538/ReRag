@@ -1,0 +1,23 @@
+{
+    "pair_id": "pair_03",
+    "v1_file": "v1_dich_vu_sua_chua.docx",
+    "v2_file": "v2_dich_vu_sua_chua.docx",
+    "changes": [
+        {
+            "id": "c1",
+            "type": "value_change",
+            "location": "Điều 3",
+            "v1_text": "Bên A tạm ứng cho Bên B số tiền là ………. đồng (………..đồng chẵn) tương ứng 30 % giá trị Hợp đồng ngay sau khi ký bản hợp đồng này.",
+            "v2_text": "Bên A tạm ứng cho Bên B số tiền là ………. đồng (………..đồng chẵn) tương ứng 50 % giá trị Hợp đồng ngay sau khi ký bản hợp đồng này.",
+            "description": "Thay đổi tỷ lệ phần trăm tạm ứng từ 30% lên 50%"
+        },
+        {
+            "id": "c2",
+            "type": "value_change",
+            "location": "Điều 9",
+            "v1_text": "Nếu Bên A vi phạm điều khoản thanh toán thì Bên A sẽ chịu phạt 1% (một phần trăm) của tổng số tiền phải thanh toán cho Bên B trên một ngày chậm thanh toán.",
+            "v2_text": "Nếu Bên A vi phạm điều khoản thanh toán thì Bên A sẽ chịu phạt 2% (hai phần trăm) của tổng số tiền phải thanh toán cho Bên B trên một ngày chậm thanh toán.",
+            "description": "Tăng mức phạt chậm thanh toán từ 1% lên 2%"
+        }
+    ]
+}

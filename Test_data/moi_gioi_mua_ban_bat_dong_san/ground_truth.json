@@ -1,0 +1,23 @@
+{
+    "pair_id": "pair_06",
+    "v1_file": "v1_moi_gioi_mua_ban_bat_dong_san.docx",
+    "v2_file": "v2_moi_gioi_mua_ban_bat_dong_san.docx",
+    "changes": [
+        {
+            "id": "c1",
+            "type": "addition",
+            "location": "Điều 5",
+            "v1_text": "- Thanh toán phí môi giới cho bên A theo Điều 2 của hợp đồng;",
+            "v2_text": "- Thanh toán phí môi giới cho bên A theo Điều 2 của hợp đồng trong thời hạn 05 ngày;",
+            "description": "Bổ sung thời hạn thanh toán phí môi giới là 05 ngày"
+        },
+        {
+            "id": "c2",
+            "type": "modification",
+            "location": "Điều 1",
+            "v1_text": "Bên B đồng ý giao cho Bên A thực hiện dịch vụ môi giới bán/mua bất động sản do Bên B là chủ sở hữu.",
+            "v2_text": "Bên B đồng ý giao độc quyền cho Bên A thực hiện dịch vụ môi giới bán/mua bất động sản do Bên B là chủ sở hữu.",
+            "description": "Bổ sung từ độc quyền vào dịch vụ môi giới"
+        }
+    ]
+}

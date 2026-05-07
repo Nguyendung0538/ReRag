@@ -1,0 +1,23 @@
+{
+    "pair_id": "pair_05",
+    "v1_file": "v1_hop_tac_kinh_doanh.docx",
+    "v2_file": "v2_hop_tac_kinh_doanh.docx",
+    "changes": [
+        {
+            "id": "c1",
+            "type": "modification",
+            "location": "Điều 6",
+            "v1_text": "QUYỀN VÀ NGHĨA VỤ CỦA BÊN A",
+            "v2_text": "QUYỀN VÀ TRÁCH NHIỆM BỒI THƯỜNG CỦA BÊN A",
+            "description": "Sửa đổi tiêu đề điều khoản thành quyền và trách nhiệm bồi thường"
+        },
+        {
+            "id": "c2",
+            "type": "deletion",
+            "location": "Điều 2",
+            "v1_text": "Đối với Bên A: Bên A góp toàn bộ các tài sản tại Địa điểm hợp tác và sử dụng tư cách của Hộ kinh doanh ………….do Bên A sở hữu và các đầy đủ các Giấy phép kinh doanh để kinh doanh nhà hàng quán bar để kinh doanh Đơn vị hợp tác.",
+            "v2_text": "Đối với Bên A: Bên A góp toàn bộ các tài sản tại Địa điểm hợp tác.",
+            "description": "Xóa bỏ phần quy định về sử dụng tư cách hộ kinh doanh"
+        }
+    ]
+}
