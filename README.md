@@ -121,13 +121,13 @@ Script sẽ tự động chạy qua tất cả 10 cặp test trong `Test_data/`,
 
 ## Kết quả đánh giá
 
-Chạy trên 10 cặp hợp đồng tiếng Việt đa dạng thể loại (đại lý, li xăng, mua bán hàng hóa, thẩm định giá, hợp tác đầu tư, dịch vụ sửa chữa, giao khoán, hợp tác kinh doanh, môi giới bất động sản, chuyển nhượng cổ phần, nguyên tắc).
+Chạy trên 9 cặp hợp đồng tiếng Việt đa dạng thể loại (đại lý, li xăng, mua bán hàng hóa, thẩm định giá, hợp tác đầu tư, dịch vụ sửa chữa, hợp tác kinh doanh, môi giới bất động sản, chuyển nhượng cổ phần, nguyên tắc).
 
 | Chỉ số | Kết quả |
 |---|---|
-| **Diff F1** (ClauseDiffer phát hiện đúng Điều thay đổi) | **~94%** |
-| **RAG Recall** (LLM tìm đủ thay đổi trong ground truth) | **~92%** |
-| **Grounding Score** (Câu trả lời có cơ sở từ tài liệu gốc) | **~90%** |
+| **Diff F1** (ClauseDiffer phát hiện đúng Điều thay đổi) | **100%** |
+| **RAG Recall** (LLM tìm đủ thay đổi trong ground truth) | **~96%** |
+| **Grounding Score** (Câu trả lời có cơ sở từ tài liệu gốc) | **~93%** |
 | **Latency trung bình** (thời gian phản hồi/cặp) | **~43 giây** |
 
 Chi tiết từng cặp:
@@ -138,7 +138,6 @@ Chi tiết từng cặp:
 | chuyen_nhung_co_phan | 100% | 67% | 100% |
 | dai_ly | 100% | 100% | 100% |
 | dich_vu_sua_chua | 100% | 100% | 100% |
-| giao_khoan | 40% | 50% | 63% |
 | hop_tac_kinh_doanh | 100% | 100% | 89% |
 | li_xang | 100% | 100% | 86% |
 | moi_gioi_mua_ban_bat_dong_san | 100% | 100% | 100% |

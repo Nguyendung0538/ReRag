@@ -37,6 +37,8 @@ class LegalRAGEngine:
             "- CẤM viết Kết luận, Tổng kết, Nhận xét, Lời khuyên, Đánh giá.\n"
             "- CẤM tóm tắt hay diễn giải nội dung. Chỉ được SAO CHÉP NGUYÊN VĂN.\n"
             "- CẤM viết bất kỳ câu nào không phải là trích dẫn nguyên văn từ tài liệu.\n"
+            "- CẤM dùng dấu '...' hoặc '[...]' để rút gọn nội dung. Phải viết đầy đủ toàn bộ văn bản.\n"
+            "- CẤM viết các đoạn 'LƯU Ý:', 'Ghi chú:', 'Nhận xét:' hay bất kỳ câu giải thích nào.\n"
             "- DỪNG NGAY sau điểm khác biệt cuối cùng. Không viết thêm gì.\n\n"
 
             "=== CÁCH TRẢ LỜI ===\n"
@@ -103,23 +105,37 @@ class LegalRAGEngine:
         relevant_diffs = self._get_relevant_diffs(query)
         is_specific_query = self._extract_dieu_from_query(query) is not None
         
-        # Nếu có diff và query tổng quát → chỉ dùng diff, bỏ retrieval context
-        if relevant_diffs and not is_specific_query:
+        # Nếu có diff: dùng diff-only path (kể cả query cụ thể lẫn tổng quát)
+        # → đảm bảo LLM sao chép nguyên văn Bản cũ/Bản mới thay vì tự tóm tắt
+        if relevant_diffs:
             # Clear retrieval context — không dùng nên không hiển thị trong citation
             self.last_retrieved_context = {"documents": [[]], "metadatas": [[]]}
             
             diff_text = self.differ.format_diff_for_prompt(relevant_diffs)
+            
+            if is_specific_query:
+                task_instruction = (
+                    "NHIỆM VỤ: Trình bày thay đổi tìm thấy theo đúng định dạng chuẩn.\n"
+                    "SAO CHÉP NGUYÊN VĂN phần Bản cũ và Bản mới (giữ nguyên dấu **in đậm**).\n"
+                    "KHÔNG được tự viết thêm nội dung ngoài trích dẫn."
+                )
+            else:
+                task_instruction = (
+                    "NHIỆM VỤ: Hãy trình bày lại TỪNG mục thay đổi ở trên theo đúng định dạng chuẩn.\n"
+                    "Với mỗi mục, SAO CHÉP NGUYÊN VĂN phần Bản cũ và Bản mới (giữ nguyên dấu **in đậm**).\n"
+                    "KHÔNG được bỏ sót mục nào. KHÔNG được tự viết thêm nội dung ngoài trích dẫn."
+                )
+            
             final_prompt = (
                 "=== KẾT QUẢ SO SÁNH TỰ ĐỘNG (DIFF) ===\n"
-                "Dưới đây là TOÀN BỘ các điểm khác biệt giữa hai tài liệu, được tính toán chính xác 100% bằng thuật toán.\n"
+                "Dưới đây là các điểm khác biệt giữa hai tài liệu, được tính toán chính xác 100% bằng thuật toán.\n"
                 "Phần Bản mới đã có sẵn dấu **in đậm** bao quanh các từ thay đổi.\n\n"
                 f"{diff_text}\n\n"
                 f'Câu hỏi: "{query}"\n\n'
-                "NHIỆM VỤ: Hãy trình bày lại TỪNG mục thay đổi ở trên theo đúng định dạng chuẩn.\n"
-                "Với mỗi mục, SAO CHÉP NGUYÊN VĂN phần Bản cũ và Bản mới (giữ nguyên dấu **in đậm**).\n"
-                "KHÔNG được bỏ sót mục nào. KHÔNG được tự viết thêm nội dung ngoài trích dẫn."
+                f"{task_instruction}"
             )
             return final_prompt
+
         
         # Query cụ thể hoặc không có diff → build retrieval context
         old_law_blocks = []
