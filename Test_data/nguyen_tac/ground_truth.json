@@ -1,0 +1,23 @@
+{
+    "pair_id": "pair_07",
+    "v1_file": "v1_nguyen_tac.docx",
+    "v2_file": "v2_nguyen_tac.docx",
+    "changes": [
+        {
+            "id": "c1",
+            "type": "deletion",
+            "location": "Điều 2",
+            "v1_text": "Trong phạm vi hợp đồng này và các tài liệu khác liên quan và gắn liền với Hợp đồng này, các từ ngữ dưới đây được hiểu như sau:",
+            "v2_text": "Trong phạm vi hợp đồng này, các từ ngữ dưới đây được hiểu như sau:",
+            "description": "Xóa cụm từ và các tài liệu khác liên quan"
+        },
+        {
+            "id": "c2",
+            "type": "addition",
+            "location": "Điều 9",
+            "v1_text": "Các Bên cam kết không vi phạm quyền sở hữu trí tuệ của nhau trong quá trình thực hiện dự án theo quy định của pháp luật.",
+            "v2_text": "Các Bên cam kết không vi phạm quyền sở hữu trí tuệ của nhau trong quá trình thực hiện dự án theo quy định của pháp luật sở hữu trí tuệ Việt Nam hiện hành.",
+            "description": "Làm rõ pháp luật áp dụng là pháp luật sở hữu trí tuệ Việt Nam hiện hành"
+        }
+    ]
+}
