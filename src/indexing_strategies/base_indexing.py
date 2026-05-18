@@ -30,3 +30,11 @@ class BaseIndexingStrategy(ABC):
         }
         """
         pass
+
+    def get_all_by_source(self, source: str) -> Dict[str, Any]:
+        """
+        Lấy toàn bộ chunks của một nguồn tài liệu.
+        Subclass có thể override nếu muốn tối ưu hoá riêng.
+        Mặc định raise NotImplementedError.
+        """
+        raise NotImplementedError("Subclass này chưa hỗ trợ get_all_by_source.")

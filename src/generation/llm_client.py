@@ -21,7 +21,8 @@ class LLMClient:
         
         response = ollama.chat(
             model=self.model_name,
-            messages=messages
+            messages=messages,
+            options={"temperature": 0.0}
         )
         return response['message']['content']
 
@@ -38,7 +39,8 @@ class LLMClient:
         stream = ollama.chat(
             model=self.model_name,
             messages=messages,
-            stream=True
+            stream=True,
+            options={"temperature": 0.0}
         )
         
         for chunk in stream:

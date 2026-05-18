@@ -33,3 +33,11 @@ class TradiRAGIndexing(BaseIndexingStrategy):
         """
         where = kwargs.get('where', None)
         return self.db_manager.query(query, n_results=top_k, where=where)
+
+    def get_all_by_source(self, source: str) -> Dict[str, Any]:
+        """
+        Lấy TOÀN BỘ chunks của một file nguồn mà không cần vector query.
+        Dùng khi người dùng yêu cầu so sánh tổng thể (không hỏi về Điều cụ thể).
+        """
+        where = {"source": {"$eq": source}}
+        return self.db_manager.get_all(where=where)

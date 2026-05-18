@@ -17,80 +17,87 @@ class LegalRAGEngine:
         new_label = self.new_law_source or "Tài liệu 2"
 
         self.system_prompt = (
-            "Bạn là chuyên gia đối chiếu và phân tích hợp đồng, văn bản pháp lý tại Việt Nam.\n"
-            f"Hệ thống đang làm việc với HAI tài liệu:\n"
-            f"  • Bản cũ: \"{old_label}\"\n"
-            f"  • Bản mới: \"{new_label}\"\n\n"
-            "CẤU TRÚC VÀ QUY TẮC TRẢ LỜI:\n"
-            "1. Tóm tắt nhanh: Viết một câu tóm tắt điểm khác biệt quan trọng nhất ở đầu câu trả lời.\n\n"
-            "2. Danh sách các điểm khác biệt:\n"
-            "   - Chỉ trình bày dưới dạng gạch đầu dòng (không dùng định dạng bảng).\n"
-            "   - Dưới mỗi chủ đề khác biệt, hãy trích dẫn ngắn gọn văn bản từ Bản cũ và văn bản từ Bản mới để đối chiếu.\n"
-            "   - Ở phần văn bản của Bản mới, hãy TÌM VÀ BÔI ĐẬM (bằng dấu **...**) đúng những từ đã bị sửa đổi hoặc thêm mới so với Bản cũ.\n"
-            "   - VÍ DỤ MẪU CAO CẤP BẠN PHẢI HỌC THEO:\n"
-            "     * **Địa điểm giải quyết tranh chấp**:\n"
-            "       + Bản cũ: Địa điểm tiến hành trọng tài tại thành phố Đà Nẵng.\n"
-            "       + Bản mới: Địa điểm tiến hành trọng tài tại **TP. Hồ Chí Minh**.\n"
-            "   - Tuyệt đối chỉ cung cấp trích dẫn, không viết thêm câu nhận xét, đánh giá hay giải thích ý nghĩa.\n\n"
-            "3. Bỏ qua điểm giống nhau: Bỏ qua và không liệt kê các điều khoản trùng khớp giữa hai văn bản.\n"
-            "4. Kết thúc sớm: Dừng việc sinh câu trả lời ngay sau khi liệt kê xong điểm khác biệt cuối cùng (không viết thêm bất cứ câu Kết luận tổng kết nào nữa)."
+            "Bạn là một Trợ lý Luật sư chuyên nghiệp. Nhiệm vụ của bạn là đọc và phân tích sự thay đổi giữa hai văn bản hợp đồng "
+            "để giải đáp chính xác, rõ ràng và trung thực câu hỏi cụ thể của người dùng.\n\n"
+            "=== NGUYÊN TẮC CỐT LÕI (BẮT BUỘC TUÂN THỦ 100%) ===\n"
+            "- Trả lời trực tiếp vào trọng tâm câu hỏi của người dùng.\n"
+            "- Chỉ sử dụng thông tin từ văn bản gốc (BẢN GỐC, BẢN MỚI) và KẾT QUẢ SO SÁNH TỰ ĐỘNG (DIFF) được cung cấp dưới đây.\n"
+            "- Tuyệt đối không tự bịa đặt, suy diễn, hoặc vẽ thêm thông tin giả định nằm ngoài ngữ cảnh được cung cấp.\n"
+            "- Nếu câu hỏi của người dùng hỏi về nội dung/thay đổi của một điều cụ thể, hãy trích dẫn trung thực sự thay đổi của điều đó từ văn bản và giải thích ngắn gọn, xúc tích nếu cần thiết."
         )
 
-    def _build_context_prompt(self, query: str, search_results: Dict[str, Any]) -> str:
+    def _build_context_prompt(self, query: str, search_results: Dict[str, Any], diff_text: str = "", intent: str = "SPECIFIC") -> str:
         """
         Lắp ráp kịch bản so sánh gộp chung kết quả từ Database.
         """
-        old_law_blocks = []
-        new_law_blocks = []
-        other_blocks = []
-        
-        # ChromaDB trả về list of list cho n_results
-        documents = search_results.get("documents", [[]])[0]
-        metadatas = search_results.get("metadatas", [[]])[0]
-        
-        for i, (doc, meta) in enumerate(zip(documents, metadatas)):
-            source = meta.get("source", "")
-            chuong = meta.get("chuong", "")
-            muc    = meta.get("muc", "")
-            dieu   = meta.get("dieu", "")
+        # Nếu là câu hỏi Liệt kê toàn bộ (LIST_ALL) hoặc đã có diff_text, loại bỏ hoàn toàn Raw Text để chống loãng context gây hoang tưởng.
+        if intent == "LIST_ALL" or diff_text:
+            context_str = "(Hệ thống đã tự động lọc bỏ tài liệu thô để tối ưu hóa đối chiếu và tránh loãng ngữ cảnh)"
+        else:
+            old_law_blocks = []
+            new_law_blocks = []
+            other_blocks = []
             
-            # Lọc bỏ các giá trị không xác định trước khi ghép chuỗi vị trí
-            _UNKNOWN_TOKENS = {"không rõ", "không xác định", "n/a", "none", ""}
+            # ChromaDB trả về list of list cho n_results
+            documents = search_results.get("documents", [[]])[0]
+            metadatas = search_results.get("metadatas", [[]])[0]
             
-            def _is_known(val: str) -> bool:
-                return val.strip().lower() not in _UNKNOWN_TOKENS
-            
-            location_parts = [p for p in [chuong, muc, dieu] if _is_known(p)]
-            location_str = " > ".join(location_parts) if location_parts else "Không rõ vị trí"
-            
-            # Format 1 block thông tin
-            block = f"Vị trí: {location_str}\nNội dung văn bản:\n{doc}\n" + "-" * 30
-            
-            if self.old_law_source and source == self.old_law_source:
-                old_law_blocks.append(block)
-            elif self.new_law_source and source == self.new_law_source:
-                new_law_blocks.append(block)
-            else:
-                other_blocks.append(f"Nguồn: {source}\n{block}")
+            for i, (doc, meta) in enumerate(zip(documents, metadatas)):
+                if not meta:
+                    continue
+                source = meta.get("source", "")
+                chuong = meta.get("chuong", "")
+                muc    = meta.get("muc", "")
+                dieu   = meta.get("dieu", "")
                 
-        context_str = ""
-        if old_law_blocks:
-            context_str += "=== BẢN GỐC ===\n" + "\n\n".join(old_law_blocks) + "\n\n"
-        if new_law_blocks:
-            context_str += "=== BẢN MỚI ===\n" + "\n\n".join(new_law_blocks) + "\n\n"
-        if other_blocks:
-            context_str += "=== TÀI LIỆU KHÁC ===\n" + "\n\n".join(other_blocks) + "\n\n"
+                # Lọc bỏ các giá trị không xác định trước khi ghép chuỗi vị trí
+                _UNKNOWN_TOKENS = {"không rõ", "không xác định", "n/a", "none", ""}
+                
+                def _is_known(val: str) -> bool:
+                    return val.strip().lower() not in _UNKNOWN_TOKENS
+                
+                location_parts = [p for p in [chuong, muc, dieu] if _is_known(p)]
+                location_str = " > ".join(location_parts) if location_parts else "Không rõ vị trí"
+                
+                # Format 1 block thông tin
+                block = f"Vị trí: {location_str}\nNội dung văn bản:\n{doc}\n" + "-" * 30
+                
+                if self.old_law_source and source == self.old_law_source:
+                    old_law_blocks.append(block)
+                elif self.new_law_source and source == self.new_law_source:
+                    new_law_blocks.append(block)
+                else:
+                    other_blocks.append(f"Nguồn: {source}\n{block}")
+                    
+            context_str = ""
+            if old_law_blocks:
+                context_str += "=== BẢN GỐC ===\n" + "\n\n".join(old_law_blocks) + "\n\n"
+            if new_law_blocks:
+                context_str += "=== BẢN MỚI ===\n" + "\n\n".join(new_law_blocks) + "\n\n"
+            if other_blocks:
+                context_str += "=== TÀI LIỆU KHÁC ===\n" + "\n\n".join(other_blocks) + "\n\n"
+            
+        diff_block = ""
+        if diff_text:
+            diff_block = (
+                "=== KẾT QUẢ SO SÁNH TỰ ĐỘNG (DIFF) ===\n"
+                "(Phần này do hệ thống tạo tự động, không phải từ LLM. "
+                "Các từ bôi đậm là những từ ĐÃ THAY ĐỔI trong Bản mới so với Bản cũ.)\n\n"
+                f"{diff_text}\n\n"
+            )
         
         final_prompt = (
-            "Dưới đây là CÁC TRÍCH ĐOẠN PHÁP LÝ được rút trích có liên quan tới câu hỏi của người dùng:\n\n"
+            "Dưới đây là KẾT QUẢ SO SÁNH TỰ ĐỘNG (DIFF) được hệ thống rút trích giữa 2 tài liệu:\n\n"
             f"{context_str}\n\n"
-            "Câu hỏi hoặc Yêu cầu So sánh của người dùng:\n"
+            f"{diff_block}"
+            "Yêu cầu của người dùng:\n"
             f'"{query}"\n\n'
-            "Dựa trên các trích đoạn trên, hãy phân tích và trả lời câu hỏi chi tiết theo đúng Quy tắc Chuyên gia."
+            "Hãy trả lời chính xác và trực tiếp câu hỏi của người dùng dựa trên các thông tin văn bản gốc và DIFF được cung cấp ở trên. "
+            "TUYỆT ĐỐI TUÂN THỦ CÁC NGUYÊN TẮC CỐT LÕI TRONG SYSTEM PROMPT!"
         )
         return final_prompt
 
-    def ask(self, query: str, top_k: int = 5) -> str:
+    def ask(self, query: str, top_k: int = 12) -> str:
         """Thực hiện một luồng RAG hoàn chỉnh trả về kết quả duy nhất."""
         print(f"[RAG] Đang dò tìm {top_k} phần tử tài liệu liên quan nhất qua Indexing Strategy...")
         results = self.indexing_strategy.build_context(query, top_k=top_k)
@@ -102,14 +109,15 @@ class LegalRAGEngine:
         answer = self.llm.generate_response(prompt=prompt, system_prompt=self.system_prompt)
         return answer
         
-    def stream_ask(self, query: str, strategy_name: str = "Normal_v1 (Raw Query)", top_k: int = 6) -> Iterator[str]:
-        """Thực hiện luồng RAG và yield text dưới dạng Stream thông qua một Strategy được chọn."""
-        from src.query_strategies import STRATEGIES, NormalV1Strategy
+    def stream_ask(self, query: str, top_k: int = 12, strategy_name: str = None) -> Iterator[str]:
+        """Thực hiện luồng RAG và yield text dưới dạng Stream."""
+        from src.query_strategies import STRATEGIES, PairedRetrievalStrategy
         
-        # Chọn lớp Strategy (Fallback về NormalV1 nếu string bị sai)
-        strategy_class = STRATEGIES.get(strategy_name, NormalV1Strategy)
-        strategy_instance = strategy_class()
-        
-        # Chuyển nhượng phân luồng thực thi cho class Strategy
-        for chunk in strategy_instance.stream_execute(query=query, engine=self, top_k=top_k):
+        if strategy_name and strategy_name in STRATEGIES:
+            strategy_class = STRATEGIES[strategy_name]
+        else:
+            strategy_class = PairedRetrievalStrategy
+            
+        strategy = strategy_class()
+        for chunk in strategy.stream_execute(query=query, engine=self, top_k=top_k):
             yield chunk

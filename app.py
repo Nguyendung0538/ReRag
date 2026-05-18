@@ -5,8 +5,8 @@ from src.embedding.chroma_manager import ChromaManager
 from src.generation.llm_client import LLMClient
 from src.rag_engine import LegalRAGEngine
 from src.ingestion.document_processor import process_document
-from src.query_strategies import STRATEGIES
 from src.indexing_strategies import INDEXING_STRATEGIES
+from src.query_strategies import STRATEGIES
 
 st.set_page_config(page_title="Hệ thống Trợ lý Pháp lý RAG", page_icon="⚖️", layout="wide")
 
@@ -23,56 +23,48 @@ if "old_law_name" not in st.session_state:
     st.session_state["old_law_name"] = ""
 if "new_law_name" not in st.session_state:
     st.session_state["new_law_name"] = ""
-if "strategy_choice" not in st.session_state:
-    st.session_state["strategy_choice"] = list(STRATEGIES.keys())[0]
-if "indexing_strategy" not in st.session_state:
-    st.session_state["indexing_strategy"] = list(INDEXING_STRATEGIES.keys())[0]
 
 if "llm_model" not in st.session_state:
     st.session_state["llm_model"] = LLM_MODEL
 if "embedding_model" not in st.session_state:
     st.session_state["embedding_model"] = EMBEDDING_MODEL
+if "indexing_strategy_name" not in st.session_state:
+    st.session_state["indexing_strategy_name"] = list(INDEXING_STRATEGIES.keys())[0]
+if "query_strategy_name" not in st.session_state:
+    st.session_state["query_strategy_name"] = "Paired Retrieval (So sánh đôi)"
 
 # ==================== SETTINGS MODAL ====================
 @st.dialog("⚙️ Cài đặt Hệ thống RAG")
 def show_settings():
-    # ── Indexing Strategy ───────────────────────────────────────────────────
-    st.subheader("📂 Indexing Strategy")
-    st.caption("Cách xử lý và lưu trữ dữ liệu (ChromaDB Vector hay RAM).")
-    chosen_idx_strat = st.selectbox(
-        label="Indexing Strategy:",
+    st.subheader("⚙️ Cấu hình")
+    
+    # Model selections
+    new_llm = st.text_input("🧠 Mô hình LLM (Ollama)", value=st.session_state["llm_model"])
+    new_embed = st.text_input("📦 Mô hình Embedding (Ollama)", value=st.session_state["embedding_model"])
+    
+    # Strategy selections
+    selected_idx_strat = st.selectbox(
+        "🗂️ Chiến lược Lập chỉ mục (Indexing Strategy)",
         options=list(INDEXING_STRATEGIES.keys()),
-        index=list(INDEXING_STRATEGIES.keys()).index(st.session_state["indexing_strategy"])
+        index=list(INDEXING_STRATEGIES.keys()).index(st.session_state["indexing_strategy_name"])
     )
     
-    is_vectorless = "Vectorless" in chosen_idx_strat
-
-    st.divider()
-    
-
-
-    # ── Query Strategy ───────────────────────────────────────────────────────
-    st.subheader("📐 Kiến trúc Truy vấn")
-    st.caption("Chọn phương pháp RAG để gửi câu hỏi vào cơ sở dữ liệu vector.")
-    chosen_strategy = st.selectbox(
-        label="Query Strategy:",
+    selected_query_strat = st.selectbox(
+        "🔍 Chiến lược Truy vấn (Query Strategy)",
         options=list(STRATEGIES.keys()),
-        index=list(STRATEGIES.keys()).index(st.session_state["strategy_choice"])
+        index=list(STRATEGIES.keys()).index(st.session_state["query_strategy_name"])
     )
 
     st.divider()
-
-
     col_save, col_cancel = st.columns(2)
     with col_save:
         if st.button("💾 Lưu cài đặt", type="primary", use_container_width=True):
-            st.session_state["strategy_choice"] = chosen_strategy
-            st.session_state["indexing_strategy"] = chosen_idx_strat
-            
-            # Reset DB nếu đổi thông số quan trọng
-            if chosen_idx_strat != st.session_state.get("indexing_strategy", ""):
-                st.session_state["db_ready"] = False
-                st.info("ℹ️ Cài đặt cốt lõi thay đổi — cần Khởi tạo lại RAG.")
+            st.session_state["llm_model"] = new_llm
+            st.session_state["embedding_model"] = new_embed
+            st.session_state["indexing_strategy_name"] = selected_idx_strat
+            st.session_state["query_strategy_name"] = selected_query_strat
+            st.success("Đã lưu cấu hình!")
+            time.sleep(0.5)
             st.rerun()
     with col_cancel:
         if st.button("Huỷ", use_container_width=True):
@@ -105,21 +97,9 @@ with st.sidebar:
                         all_chunks.extend(chunks)
                     
                     if all_chunks:
-                        # Init strategy
-                        idx_strat_name = st.session_state["indexing_strategy"]
-                        strat_class = INDEXING_STRATEGIES[idx_strat_name]
-                        if "Tradi" in idx_strat_name:
-                            indexer = strat_class(embedding_model=st.session_state["embedding_model"])
-                        elif "Hybrid" in idx_strat_name:
-                            indexer = strat_class(
-                                embedding_model=st.session_state["embedding_model"],
-                                llm_model=st.session_state["llm_model"]
-                            )
-                        elif "Vectorless" in idx_strat_name:
-                            indexer = strat_class(llm_model=st.session_state["llm_model"])
-                        else:
-                            # Fallback khởi tạo
-                            indexer = strat_class()
+                        # Dùng Indexing Strategy đã chọn
+                        idx_class = INDEXING_STRATEGIES[st.session_state["indexing_strategy_name"]]
+                        indexer = idx_class(embedding_model=st.session_state["embedding_model"])
                             
                         # Keep it globally so we can retrieve exactly what was just parsed 
                         # This is especially true for NoEmbed which holds data in RAM.
@@ -135,7 +115,7 @@ with st.sidebar:
                                 f"🕒 Thời gian khởi tạo: **{init_elapsed:.1f} giây**"
                             )
                         else:
-                            st.error(f"❌ Quá trình lưu thất bại (có thể tổng dung lượng quá giới hạn của Indexing Strategy hiện tại). Hãy thử đổi Indexing Strategy.")
+                            st.error("❌ Quá trình lưu thất bại. Kiểm tra lại file tài liệu.")
                     else:
                         st.error("Không thể rút trích văn bản từ 2 file này.")
                 except Exception as e:
@@ -149,8 +129,9 @@ with st.sidebar:
     st.markdown("**⚙️ Cài đặt hiện tại:**")
     st.info(
         f"🧠 **LLM:** {st.session_state['llm_model']}\n\n"
-        f"📂 **Indexing:** {st.session_state['indexing_strategy']}\n\n"
-        f"💼 **Query:** {st.session_state['strategy_choice']}"
+        f"📦 **Embedding:** {st.session_state['embedding_model']}\n\n"
+        f"🗂️ **Index Strat:** {st.session_state['indexing_strategy_name']}\n\n"
+        f"🔍 **Query Strat:** {st.session_state['query_strategy_name']}"
     )
     if st.button("✏️ Thay đổi cài đặt", use_container_width=True):
         show_settings()
@@ -187,12 +168,15 @@ if prompt := st.chat_input("Hỏi gì đó (Ví dụ: So sánh hạn sử dụng
                 new_law_source=st.session_state["new_law_name"]
             )
             
-            chosen_strategy = st.session_state.get("strategy_choice", "Normal_v1 (Raw Query)")
             start_time = time.time()
             
             with st.spinner("Đang suy nghĩ..."):
                 full_text = ""
-                for chunk_text in rag_engine.stream_ask(query=prompt, strategy_name=chosen_strategy, top_k=6):
+                for chunk_text in rag_engine.stream_ask(
+                    query=prompt, 
+                    top_k=12,
+                    strategy_name=st.session_state.get("query_strategy_name")
+                ):
                     full_text += chunk_text
                 
                 st.markdown(full_text)

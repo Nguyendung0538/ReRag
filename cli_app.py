@@ -79,7 +79,7 @@ def main():
                 break
                 
             # Stream câu trả lời RAG
-            for text_chunk in rag_engine.stream_ask(query=query_stripped, top_k=6):
+            for text_chunk in rag_engine.stream_ask(query=query_stripped, top_k=12):
                 print(text_chunk, end="", flush=True)
                 
         except KeyboardInterrupt:

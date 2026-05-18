@@ -87,3 +87,22 @@ class ChromaManager:
         
         results = self.collection.query(**kwargs)
         return results
+
+    def get_all(self, where: dict = None) -> Dict[str, Any]:
+        """
+        Lấy TOÀN BỘ documents khớp với filter (không dùng vector query).
+        Dùng cho trường hợp cần liệt kê tất cả chunks của một nguồn.
+        Trả về cùng cấu trúc với method query() để tương thích.
+        """
+        kwargs = {}
+        if where:
+            kwargs["where"] = where
+
+        results = self.collection.get(**kwargs, include=["documents", "metadatas"])
+        # Chuẩn hóa về cùng format với query()
+        return {
+            "ids": [results.get("ids", [])],
+            "documents": [results.get("documents", [])],
+            "metadatas": [results.get("metadatas", [])],
+            "distances": [[0.0] * len(results.get("ids", []))]
+        }
