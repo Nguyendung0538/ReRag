@@ -188,3 +188,91 @@ class TextDiffEngine:
                 best_ratio = ratio
                 best_key = key
         return best_key
+
+    def diff_texts_structured(self, old_text: str, new_text: str) -> Tuple[str, str]:
+        import re
+        old_sentences = [s.strip() for s in re.split(r'(?<=[.!?\n])\s+', old_text) if s.strip()]
+        new_sentences = [s.strip() for s in re.split(r'(?<=[.!?\n])\s+', new_text) if s.strip()]
+        
+        matcher = difflib.SequenceMatcher(None, old_sentences, new_sentences, autojunk=False)
+        
+        old_out = []
+        new_out = []
+        
+        for tag, i1, i2, j1, j2 in matcher.get_opcodes():
+            if tag == "equal":
+                if not old_out or old_out[-1] != "[...]":
+                    old_out.append("[...]")
+                    new_out.append("[...]")
+            else:
+                sub_old_text = " ".join(old_sentences[i1:i2])
+                sub_new_text = " ".join(new_sentences[j1:j2])
+                
+                old_tokens = sub_old_text.split()
+                new_tokens = sub_new_text.split()
+                sub_matcher = difflib.SequenceMatcher(None, old_tokens, new_tokens, autojunk=False)
+                
+                new_rendered = self._render_new_with_bold(new_tokens, sub_matcher.get_opcodes())
+                
+                if sub_old_text:
+                    old_out.append(sub_old_text)
+                if new_rendered:
+                    new_out.append(new_rendered)
+                    
+        final_old = " ".join(old_out).replace("[...] [...]", "[...]").replace("[...]", "").strip()
+        final_new = " ".join(new_out).replace("[...] [...]", "[...]").replace("[...]", "").strip()
+        
+        final_old = re.sub(r'\s+', ' ', final_old).strip()
+        final_new = re.sub(r'\s+', ' ', final_new).strip()
+        
+        return final_old, final_new
+
+    def get_structured_diff(
+        self,
+        chunks_old: List[Dict[str, Any]],
+        texts_old: List[str],
+        chunks_new: List[Dict[str, Any]],
+        texts_new: List[str],
+    ) -> List[Dict[str, Any]]:
+        pairs, only_in_old, only_in_new = self._pair_chunks(chunks_old, texts_old, chunks_new, texts_new)
+        
+        structured_results = []
+        
+        # 1. Cac dieu co o ca hai ban
+        for dieu_label, old_text, new_text in pairs:
+            ratio = difflib.SequenceMatcher(None, old_text, new_text).ratio()
+            if ratio >= self.IDENTICAL_THRESHOLD:
+                structured_results.append({
+                    "label": dieu_label,
+                    "status": "unchanged",
+                    "old_text": old_text,
+                    "new_text": new_text
+                })
+            else:
+                old_diff, new_diff = self.diff_texts_structured(old_text, new_text)
+                structured_results.append({
+                    "label": dieu_label,
+                    "status": "modified",
+                    "old_text": old_diff,
+                    "new_text": new_diff,
+                    "old_full": old_text,
+                    "new_full": new_text
+                })
+        
+        for key, old_text in only_in_old:
+            structured_results.append({
+                "label": key,
+                "status": "deleted",
+                "old_text": old_text,
+                "new_text": "(không còn điều khoản này)"
+            })
+            
+        for key, new_text in only_in_new:
+            structured_results.append({
+                "label": key,
+                "status": "added",
+                "old_text": "(không có điều khoản này)",
+                "new_text": new_text
+            })
+            
+        return structured_results
