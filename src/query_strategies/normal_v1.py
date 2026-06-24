@@ -24,7 +24,7 @@ class NormalV1Strategy(QueryStrategy):
         docs = results.get("documents", [[]])[0]
         
         if not docs:
-            yield "❌ Không tìm thấy văn bản pháp lý nào khớp với dữ liệu trong bộ nhớ."
+            yield "Khong tim thay van ban phap ly nao khop voi du lieu trong bo nho."
             return
             
         # Sử dụng hàm build context prompt từ Engine giúp định dạng Text khối thống nhất

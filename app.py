@@ -138,51 +138,13 @@ with st.sidebar:
 tab_chat, tab_diff = st.tabs(["Hỏi Đáp", "Phân tích Thay đổi"])
 
 with tab_chat:
+    chat_container = st.container()
+
+with chat_container:
     for msg in st.session_state["messages"]:
         with st.chat_message(msg["role"]):
             st.markdown(msg["content"])
             
-    if prompt := st.chat_input("Hỏi gì đó (Ví dụ: So sánh hạn sử dụng thẻ căn cước...)"):
-        if not st.session_state["db_ready"]:
-            st.error("Bạn cần tải lên văn bản và nhấn 'Khởi tạo Hệ thống RAG' trước khi đặt câu hỏi!")
-        else:
-            st.session_state["messages"].append({"role": "user", "content": prompt})
-            with st.chat_message("user"):
-                st.markdown(prompt)
-                
-            with st.chat_message("assistant"):
-                if "active_indexer" not in st.session_state:
-                    st.error("Không tìm thấy bộ nhớ. Vui lòng nhấn 'Khởi tạo Hệ thống RAG' bên trái trước.")
-                    st.stop()
-                    
-                indexer = st.session_state["active_indexer"]
-                llm_client = LLMClient(model_name=st.session_state.get("llm_model", "qwen3:8b"))
-                rag_engine = LegalRAGEngine(
-                    indexing_strategy=indexer,
-                    llm_client=llm_client,
-                    old_law_source=st.session_state["old_law_name"],
-                    new_law_source=st.session_state["new_law_name"]
-                )
-                
-                start_time = time.time()
-                
-                with st.spinner("Đang suy nghĩ..."):
-                    full_text = ""
-                    for chunk_text in rag_engine.stream_ask(
-                        query=prompt, 
-                        top_k=12,
-                        strategy_name=st.session_state.get("query_strategy_name")
-                    ):
-                        full_text += chunk_text
-                    
-                    st.markdown(full_text)
-                    end_time = time.time()
-                    st.caption(f"Thời gian phản hồi: {end_time - start_time:.2f} giây")
-                    full_response = full_text + f"\n\nThời gian phản hồi: {end_time - start_time:.2f} giây"
-                    
-            st.session_state["messages"].append({"role": "assistant", "content": full_response})
-            st.rerun()
-
 with tab_diff:
     st.subheader("So sánh Song song các Điều khoản")
     if not st.session_state["db_ready"] or "chunks_old" not in st.session_state or "chunks_new" not in st.session_state:
@@ -242,3 +204,45 @@ with tab_diff:
                     with c2:
                         st.markdown("**Bản mới:**")
                         st.markdown(item["new_text"])
+
+# Đưa chat_input ra mức root để nó bám cố định (floating) dưới đáy trang
+if prompt := st.chat_input("Hỏi gì đó (Ví dụ: So sánh hạn sử dụng thẻ căn cước...)"):
+    if not st.session_state["db_ready"]:
+        st.error("Bạn cần tải lên văn bản và nhấn 'Khởi tạo Hệ thống RAG' trước khi đặt câu hỏi!")
+    else:
+        st.session_state["messages"].append({"role": "user", "content": prompt})
+        
+        # Render tin nhắn mới vào đúng chat_container nằm trong tab_chat
+        with chat_container:
+            with st.chat_message("user"):
+                st.markdown(prompt)
+                
+            with st.chat_message("assistant"):
+                if "active_indexer" not in st.session_state:
+                    st.error("Không tìm thấy bộ nhớ. Vui lòng nhấn 'Khởi tạo Hệ thống RAG' bên trái trước.")
+                    st.stop()
+                    
+                indexer = st.session_state["active_indexer"]
+                llm_client = LLMClient(model_name=st.session_state.get("llm_model", "qwen3:8b"))
+                rag_engine = LegalRAGEngine(
+                    indexing_strategy=indexer,
+                    llm_client=llm_client,
+                    old_law_source=st.session_state["old_law_name"],
+                    new_law_source=st.session_state["new_law_name"]
+                )
+                
+                start_time = time.time()
+                
+                with st.spinner("Đang suy nghĩ..."):
+                    full_text = st.write_stream(rag_engine.stream_ask(
+                        query=prompt, 
+                        top_k=12,
+                        strategy_name=st.session_state.get("query_strategy_name")
+                    ))
+                    
+                    end_time = time.time()
+                    st.caption(f"Thời gian phản hồi: {end_time - start_time:.2f} giây")
+                    full_response = full_text + f"\n\n*Thời gian phản hồi: {end_time - start_time:.2f} giây*"
+                    
+            st.session_state["messages"].append({"role": "assistant", "content": full_response})
+            st.rerun()

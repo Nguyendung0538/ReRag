@@ -7,50 +7,50 @@ from src.ingestion.document_processor import process_document
 
 def main():
     print("======================================================")
-    print("👨‍⚖️ CHƯƠNG TRÌNH SO SÁNH VÀ HỎI ĐÁP PHÁP LÝ (LEGAL RAG) ")
+    print(" CHUONG TRINH SO SANH VA HOI DAP PHAP LY (LEGAL RAG) ")
     print("======================================================")
     
-    print("\n📥 BƯỚC 1: TẢI LÊN VĂN BẢN ĐỂ SO SÁNH")
-    old_file_path = input("Nhập đường dẫn TÀI LIỆU LUẬT CŨ (Bản gốc): ").strip().strip('"\'')
+    print("\n BUOC 1: TAI LEN VAN BAN DE SO SANH")
+    old_file_path = input("Nhap duong dan TAI LIEU LUAT CU (Ban goc): ").strip().strip('"\'')
     if not os.path.exists(old_file_path):
-        print(f"❌ Không tìm thấy file: {old_file_path}")
+        print(f" Khong tim thay file: {old_file_path}")
         sys.exit(1)
         
-    new_file_path = input("Nhập đường dẫn TÀI LIỆU LUẬT MỚI (Bản sửa đổi/mới): ").strip().strip('"\'')
+    new_file_path = input("Nhap duong dan TAI LIEU LUAT MOI (Ban sua doi/moi): ").strip().strip('"\'')
     if not os.path.exists(new_file_path):
-        print(f"❌ Không tìm thấy file: {new_file_path}")
+        print(f" Khong tim thay file: {new_file_path}")
         sys.exit(1)
         
     old_law_source = os.path.basename(old_file_path)
     new_law_source = os.path.basename(new_file_path)
 
-    print("\n🛠 BƯỚC 2: KHỞI TẠO DỮ LIỆU...")
+    print("\n BUOC 2: KHOI TAO DU LIEU...")
     try:
         db_manager = ChromaManager(collection_name="legal_compare")
         
-        print("\n🧹 Đang xóa Database pháp lý cũ...")
+        print("\n Dang xoa Database phap ly cu...")
         db_manager.reset_collection()
         
         all_chunks = []
         for path in [old_file_path, new_file_path]:
-            print(f"📄 Đang xử lý file: {path}...")
+            print(f" Dang xu ly file: {path}...")
             chunks = process_document(path)
             for chunk in chunks:
                  chunk.metadata["source"] = os.path.basename(path)
             all_chunks.extend(chunks)
                 
         if all_chunks:
-            print(f"🧠 Đang nạp {len(all_chunks)} khối văn bản vào DB (Vector Embeddings)... Vui lòng đợi trong giây lát...")
+            print(f" Dang nap {len(all_chunks)} khoi van ban vao DB (Vector Embeddings)... Vui long doi trong giay lat...")
             db_manager.add_documents(all_chunks)
-            print("✅ Đã nạp thành công!\n")
+            print(" Da nap thanh cong!\n")
         else:
-            print("⚠ Không trích xuất được văn bản.")
+            print(" Khong trich xuat duoc van ban.")
             sys.exit(1)
     except Exception as e:
-         print(f"❌ Lỗi nạp dữ liệu DB: {e}")
+         print(f" Loi nap du lieu DB: {e}")
          sys.exit(1)
 
-    print("🤖 Khởi tạo nhánh Lập luận AI (Qwen3:8b)...")
+    print(" Khoi tao nhanh Lap luan AI (Qwen3:8b)...")
     llm_client = LLMClient(model_name="qwen3:8b")
     
     rag_engine = LegalRAGEngine(
@@ -61,32 +61,32 @@ def main():
     )
     
     print("------------------------------------------------------")
-    print("💡 Hướng dẫn:")
-    print("- Gõ câu hỏi của bạn (Ví dụ: 'So sánh thẻ căn cước công dân giữa hai phiên bản có gì khác biệt?')")
-    print("- Gõ 'exit' hoặc 'quit' để thoát chương trình.")
+    print(" Huong dan:")
+    print("- Go cau hoi cua ban (Vi du: 'So sanh the can cuoc cong dan giua hai phien ban co gi khac biet?')")
+    print("- Go 'exit' hoac 'quit' de thoat chuong trinh.")
     print("------------------------------------------------------\n")
     
     while True:
         try:
-            query = input("\n👤 Câu hỏi của bạn: ")
+            query = input("\n Cau hoi cua ban: ")
             query_stripped = query.strip()
             
             if not query_stripped:
                 continue
             
-            if query_stripped.lower() in ['exit', 'quit', 'thoát']:
-                print("Tạm biệt!")
+            if query_stripped.lower() in ['exit', 'quit', 'thoat']:
+                print("Tam biet!")
                 break
                 
-            # Stream câu trả lời RAG
+            # Stream cau tra loi RAG
             for text_chunk in rag_engine.stream_ask(query=query_stripped, top_k=12):
                 print(text_chunk, end="", flush=True)
                 
         except KeyboardInterrupt:
-            print("\nĐã hủy yêu cầu hiện tại.")
+            print("\n Da huy yeu cau hien tai.")
             continue
         except Exception as e:
-            print(f"\n❌ Lỗi phát sinh trong quá trình truy vấn: {e}")
+            print(f"\n Loi phat sinh trong qua trinh truy van: {e}")
 
 if __name__ == "__main__":
     main()

@@ -225,10 +225,11 @@ class PairedRetrievalStrategy(QueryStrategy):
 
         # === GỘP VÀ LOẠI BỎ TRÙNG LẶP ===
         merged = self._merge_results(results_old, results_new)
+        engine.last_search_results = merged
         final_docs = merged.get("documents", [[]])[0]
         
         if not final_docs:
-            yield "❌ Không tìm thấy văn bản pháp lý nào phù hợp để đối chiếu."
+            yield "Khong tim thay van ban phap ly nao phu hop de doi chieu."
             return
             
         print(f"[Paired RAG] Tổng cộng gom được {len(final_docs)} chunks không trùng lặp cho LLM lập luận.")

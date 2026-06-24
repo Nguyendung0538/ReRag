@@ -133,16 +133,24 @@ class TextDiffEngine:
             if not meta:
                 continue
             key = meta.get("dieu", "")
-            if key and key not in old_map:
-                old_map[key] = text
+            if key:
+                if key not in old_map:
+                    old_map[key] = []
+                old_map[key].append(text)
+        for key in old_map:
+            old_map[key] = "\n".join(old_map[key])
 
         new_map = {}
         for meta, text in zip(metas_new, texts_new):
             if not meta:
                 continue
             key = meta.get("dieu", "")
-            if key and key not in new_map:
-                new_map[key] = text
+            if key:
+                if key not in new_map:
+                    new_map[key] = []
+                new_map[key].append(text)
+        for key in new_map:
+            new_map[key] = "\n".join(new_map[key])
 
         pairs = []
         matched_old_keys = set()

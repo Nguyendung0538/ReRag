@@ -30,21 +30,37 @@ class OllamaEmbedder:
 
     def embed_batch(self, texts: List[str]) -> List[List[float]]:
         """
-        Nhúng hàng loạt các đoạn văn bản.
-        keep_alive=0 chỉ áp dụng sau request CUỐI CÙNG — các request giữa chừng
-        vẫn giữ model trong VRAM để tránh reload liên tục.
+        Nhung hang loat cac doan van ban bang batch API (ollama.embed).
+        Chia nho thanh tung batch 100 de tranh timeout hoac tran VRAM.
+        keep_alive=0 chi ap dung cho batch cuoi cung de giai phong bo nho.
         """
+        if not texts:
+            return []
+
         results = []
-        last_idx = len(texts) - 1
-        for i, text in enumerate(texts):
-            # Chỉ unload ở chunk cuối cùng
-            ka = self.keep_alive if i == last_idx else -1
-            response = ollama.embeddings(
+        batch_size = 100
+        num_batches = (len(texts) + batch_size - 1) // batch_size
+
+        for i in range(num_batches):
+            start_idx = i * batch_size
+            end_idx = start_idx + batch_size
+            sub_batch = texts[start_idx:end_idx]
+
+            # Chi unload o batch cuoi cung
+            ka = self.keep_alive if i == num_batches - 1 else -1
+
+            response = ollama.embed(
                 model=self.model_name,
-                prompt=text,
+                input=sub_batch,
                 keep_alive=ka,
             )
-            results.append(response["embedding"])
+
+            embeddings = getattr(response, "embeddings", None)
+            if embeddings is None:
+                embeddings = response.get("embeddings", [])
+
+            results.extend(embeddings)
+
         return results
 
     def unload(self):
@@ -67,8 +83,8 @@ if __name__ == "__main__":
     embedder = OllamaEmbedder()
     try:
         vec = embedder.embed_text("Xin chào, đây là bài test hệ thống RAG.")
-        print(f"✅ Lấy vector thành công! Kích thước chiều của vector: {len(vec)}")
+        print(f"Lay vector thanh cong! Kich thuoc chieu cua vector: {len(vec)}")
         embedder.unload()
     except Exception as e:
-        print(f"❌ Lỗi khi lấy thông tin từ Ollama: {e}\nHãy chắc chắn Ollama đang chạy với model qwen3-embedding:8b")
+        print(f"Loi khi lay thong tin tu Ollama: {e}\nHay chac chan Ollama dang chay voi model qwen3-embedding:8b")
 
