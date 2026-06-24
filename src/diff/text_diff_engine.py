@@ -10,7 +10,7 @@ class TextDiffEngine:
     # Ngưỡng tối thiểu để coi 2 đoạn văn là "có liên quan" (cùng điều)
     PAIR_MIN_RATIO = 0.4
     # Ngưỡng để bỏ qua các điều giống nhau hoàn toàn (không có gì thay đổi)
-    IDENTICAL_THRESHOLD = 0.98
+    IDENTICAL_THRESHOLD = 1.0
 
     def diff_texts(self, old_text: str, new_text: str) -> str:
         import re

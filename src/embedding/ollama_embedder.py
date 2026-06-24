@@ -54,9 +54,9 @@ class OllamaEmbedder:
         """
         try:
             requests.post(
-                f"{self.OLLAMA_BASE_URL}/api/embeddings",
-                json={"model": self.model_name, "prompt": "", "keep_alive": 0},
-                timeout=5,
+                f"{self.OLLAMA_BASE_URL}/api/generate",
+                json={"model": self.model_name, "keep_alive": 0},
+                timeout=10,
             )
             print(f"[Embedder] Model '{self.model_name}' đã được unload khỏi VRAM.")
         except Exception as e:
