@@ -14,19 +14,19 @@ def main():
     # Kiểm tra file có tồn tại không
     for path in file_paths:
         if not os.path.exists(path):
-            print(f"❌ Không tìm thấy file: {path}")
+            print(f"Loi: Khong tim thay file: {path}")
             sys.exit(1)
 
     db_manager = ChromaManager(persist_dir="./chroma_db", collection_name="legal_compare")
     
     # Reset DB trước khi nạp tài liệu mới (theo design: up file mới -> drop DB cũ)
-    print("\n🧹 Bắt đầu dọn dẹp Database pháp lý cũ...")
+    print("\nBat dau don dep Database phap ly cu...")
     db_manager.reset_collection()
-    print("✅ Đã dọn dẹp xong!")
+    print("Da don dep xong!")
     
     all_chunks = []
     for path in file_paths:
-        print(f"\n📄 Đang ráp và phân tách cấu trúc (Chunking) file: {path}...")
+        print(f"\nDang rap va phan tach cau truc (Chunking) file: {path}...")
         try:
             chunks = process_document(path)
             print(f"   -> Đã trích xuất được {len(chunks)} chunks pháp lý (Điều/Khoản).")
@@ -35,16 +35,16 @@ def main():
                  chunk.metadata["source"] = os.path.basename(path)
             all_chunks.extend(chunks)
         except Exception as e:
-            print(f"❌ Bỏ qua file {path} do lỗi xử lý: {e}")
+            print(f"Bo qua file {path} do loi xu ly: {e}")
             
     if all_chunks:
-        print(f"\n🧠 Bắt đầu Embed và nạp {len(all_chunks)} chunks vào ChromaDB qua Ollama (qwen3-embedding:8b)...")
+        print(f"\nBat dau Embed va nap {len(all_chunks)} chunks vao ChromaDB qua Ollama (qwen3-embedding:8b)...")
         db_manager.add_documents(all_chunks)
-        print("\n🎉 Hoàn tất quá trình nhập liệu (Ingestion). Dữ liệu đã sẵn sàng trên ổ đĩa!")
+        print("\nHoan tat qua trinh nhap lieu (Ingestion). Du lieu da san sang tren o dia!")
         print("Thư mục CSDL: ./chroma_db")
         
         # Test Query nhỏ
-        print("\n🔍 Chạy Test Thử Nghiệm Query DB...")
+        print("\nChay Test Thu Nghiem Query DB...")
         try:
             test_res = db_manager.query("thẻ căn cước công dân", n_results=1)
             print("Kết quả test:")
@@ -55,7 +55,7 @@ def main():
             print("Lỗi khi test query rút trích:", e)
             
     else:
-        print("\n⚠ Không có dữ liệu văn bản nào được nhận diện. Hủy quá trình.")
+        print("\nKhong co du lieu van ban nao duoc nhan dien. Huy qua trinh.")
 
 if __name__ == "__main__":
     main()
