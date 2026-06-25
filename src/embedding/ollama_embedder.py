@@ -1,27 +1,31 @@
-import ollama
+from ollama import Client
 import requests
 from typing import List
 
 class OllamaEmbedder:
     """
-    Class giao tiếp với Ollama API cục bộ để lấy embeddings.
-    Khuyến nghị dùng qwen3-embedding:8b theo setup của user.
+    Class giao tiep voi Ollama API cuc bo de lay embeddings.
+    Khuyen nghi dung qwen3-embedding:8b theo setup cua user.
     
-    Tham số keep_alive:
-    - keep_alive=0  : Ollama unload model khỏi VRAM ngay sau request → giải phóng tài nguyên cho LLM
-    - keep_alive=-1 : Ollama giữ model trong VRAM mãi mãi (mặc định Ollama là 5 phút)
-    - keep_alive=300: Giữ 300 giây (5 phút)
-    Mặc định dùng 0 để nhường VRAM cho qwen3:8b khi không cần embed.
+    Tham so keep_alive:
+    - keep_alive=0  : Ollama unload model khoi VRAM ngay sau request -> giai phong tai nguyen cho LLM
+    - keep_alive=-1 : Ollama giu model trong VRAM mai mai (mac dinh Ollama la 5 phut)
+    - keep_alive=300: Giu 300 giay (5 phut)
+    Mac dinh dung 0 de nhuong VRAM cho qwen3:8b khi khong can embed.
     """
-    OLLAMA_BASE_URL = "http://localhost:11434"
 
-    def __init__(self, model_name: str = "qwen3-embedding:8b", keep_alive: int = 0):
+    def __init__(self, model_name: str = "qwen3-embedding:8b", keep_alive: int = 300, base_url: str = "http://localhost:11434"):
         self.model_name = model_name
         self.keep_alive = keep_alive
+        self.base_url = base_url
+        self.client = Client(
+            host=self.base_url,
+            headers={"ngrok-skip-browser-warning": "true"}
+        )
 
     def embed_text(self, text: str) -> List[float]:
-        """Gửi đoạn text qua Ollama để sinh vector float."""
-        response = ollama.embeddings(
+        """Gui doan text qua Ollama de sinh vector float."""
+        response = self.client.embeddings(
             model=self.model_name,
             prompt=text,
             keep_alive=self.keep_alive,
@@ -49,7 +53,7 @@ class OllamaEmbedder:
             # Chi unload o batch cuoi cung
             ka = self.keep_alive if i == num_batches - 1 else -1
 
-            response = ollama.embed(
+            response = self.client.embed(
                 model=self.model_name,
                 input=sub_batch,
                 keep_alive=ka,
@@ -65,18 +69,19 @@ class OllamaEmbedder:
 
     def unload(self):
         """
-        Chủ động yêu cầu Ollama unload model khỏi VRAM ngay lập tức.
-        Gọi hàm này sau khi hoàn tất ingestion để nhường VRAM cho LLM.
+        Chu dong yeu cau Ollama unload model khoi VRAM ngay lap tuc.
+        Goi ham nay sau khi hoan tat ingestion de nhuong VRAM cho LLM.
         """
         try:
             requests.post(
-                f"{self.OLLAMA_BASE_URL}/api/generate",
+                f"{self.base_url}/api/generate",
                 json={"model": self.model_name, "keep_alive": 0},
+                headers={"ngrok-skip-browser-warning": "true"},
                 timeout=10,
             )
-            print(f"[Embedder] Model '{self.model_name}' đã được unload khỏi VRAM.")
+            print(f"[Embedder] Model '{self.model_name}' da duoc unload khoi VRAM.")
         except Exception as e:
-            print(f"[Embedder] Không thể unload model: {e}")
+            print(f"[Embedder] Khong the unload model: {e}")
 
 
 if __name__ == "__main__":

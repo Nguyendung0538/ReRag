@@ -8,12 +8,13 @@ class TradiRAGIndexing(BaseIndexingStrategy):
     Chiến thuật nạp truyền thống: Chunk -> Vectors -> Storage.
     Giữ nguyên bộ code cũ của hệ thống.
     """
-    def __init__(self, embedding_model: str = "qwen3-embedding:8b"):
+    def __init__(self, embedding_model: str = "qwen3-embedding:8b", base_url: str = "http://localhost:11434"):
         self.db_manager = ChromaManager(
             collection_name="legal_compare",
-            embedding_model=embedding_model
+            embedding_model=embedding_model,
+            base_url=base_url
         )
-        # Khởi tạo DB luôn mỗi lần instantiate
+        # Khoi tao DB luon moi lan instantiate
         self.db_manager.reset_collection()
 
     def index(self, chunks: List[DocumentChunk], **kwargs) -> bool:
@@ -21,9 +22,6 @@ class TradiRAGIndexing(BaseIndexingStrategy):
             return False
         
         self.db_manager.add_documents(chunks)
-        # Giải phóng VRAM để nhường cho LLM
-        if hasattr(self.db_manager, 'embedder'):
-            self.db_manager.embedder.unload()
         return True
 
     def build_context(self, query: str, top_k: int = 5, **kwargs) -> Dict[str, Any]:

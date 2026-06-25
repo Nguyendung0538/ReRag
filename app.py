@@ -28,6 +28,8 @@ if "llm_model" not in st.session_state:
     st.session_state["llm_model"] = LLM_MODEL
 if "embedding_model" not in st.session_state:
     st.session_state["embedding_model"] = EMBEDDING_MODEL
+if "ollama_base_url" not in st.session_state:
+    st.session_state["ollama_base_url"] = "http://localhost:11434"
 if "indexing_strategy_name" not in st.session_state:
     st.session_state["indexing_strategy_name"] = list(INDEXING_STRATEGIES.keys())[0]
 if "query_strategy_name" not in st.session_state:
@@ -40,6 +42,7 @@ def show_settings():
     
     new_llm = st.text_input("Mô hình LLM (Ollama)", value=st.session_state["llm_model"])
     new_embed = st.text_input("Mô hình Embedding (Ollama)", value=st.session_state["embedding_model"])
+    new_base_url = st.text_input("Ollama API URL (Dùng cho Ngrok/Colab)", value=st.session_state["ollama_base_url"])
     
     selected_idx_strat = st.selectbox(
         "Chiến lược Lập chỉ mục (Indexing Strategy)",
@@ -59,6 +62,7 @@ def show_settings():
         if st.button("Lưu cài đặt", type="primary", use_container_width=True):
             st.session_state["llm_model"] = new_llm
             st.session_state["embedding_model"] = new_embed
+            st.session_state["ollama_base_url"] = new_base_url
             st.session_state["indexing_strategy_name"] = selected_idx_strat
             st.session_state["query_strategy_name"] = selected_query_strat
             st.success("Đã lưu cấu hình!")
@@ -100,7 +104,10 @@ with st.sidebar:
                     
                     if all_chunks:
                         idx_class = INDEXING_STRATEGIES[st.session_state["indexing_strategy_name"]]
-                        indexer = idx_class(embedding_model=st.session_state["embedding_model"])
+                        indexer = idx_class(
+                            embedding_model=st.session_state["embedding_model"],
+                            base_url=st.session_state["ollama_base_url"]
+                        )
                             
                         st.session_state["active_indexer"] = indexer
                         
@@ -128,6 +135,7 @@ with st.sidebar:
     st.info(
         f"LLM: {st.session_state['llm_model']}\n\n"
         f"Embedding: {st.session_state['embedding_model']}\n\n"
+        f"Ollama URL: {st.session_state['ollama_base_url']}\n\n"
         f"Index Strat: {st.session_state['indexing_strategy_name']}\n\n"
         f"Query Strat: {st.session_state['query_strategy_name']}"
     )
@@ -223,7 +231,10 @@ if prompt := st.chat_input("Hỏi gì đó (Ví dụ: So sánh hạn sử dụng
                     st.stop()
                     
                 indexer = st.session_state["active_indexer"]
-                llm_client = LLMClient(model_name=st.session_state.get("llm_model", "qwen3:8b"))
+                llm_client = LLMClient(
+                    model_name=st.session_state.get("llm_model", "qwen3:8b"),
+                    base_url=st.session_state.get("ollama_base_url", "http://localhost:11434")
+                )
                 rag_engine = LegalRAGEngine(
                     indexing_strategy=indexer,
                     llm_client=llm_client,

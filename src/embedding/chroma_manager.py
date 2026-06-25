@@ -10,16 +10,16 @@ class ChromaManager:
     Vì mỗi lần chạy chúng ta đều nạp lại 2 văn bản mới nên không cần lưu ra ổ cứng,
     giúp tránh tạo ra các file rác và chạy nhanh hơn.
     """
-    def __init__(self, collection_name: str = "legal_docs", embedding_model: str = "qwen3-embedding:8b"):
+    def __init__(self, collection_name: str = "legal_docs", embedding_model: str = "qwen3-embedding:8b", base_url: str = "http://localhost:11434"):
         
-        # Kết nối tới In-Memory DB (Chỉ lưu trên RAM)
+        # Ket noi toi In-Memory DB (Chi luu tren RAM)
         self.client = chromadb.EphemeralClient()
         self.collection_name = collection_name
         
-        # Load Collection ra nếu có sẵn, dùng để Query lại sau này.
+        # Load Collection ra neu co san, dung de Query lai sau nay.
         self.collection = self.client.get_or_create_collection(name=self.collection_name)
         
-        self.embedder = OllamaEmbedder(model_name=embedding_model)
+        self.embedder = OllamaEmbedder(model_name=embedding_model, base_url=base_url)
 
     def reset_collection(self):
         """Xóa trắng Collection pháp lý cũ để nạp tài liệu mới"""
